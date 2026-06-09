@@ -1,20 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  МОДУЛЬ STATS-DTO (ОБЩИЕ DTO ДЛЯ СТАТИСТИКИ)
+  ============================================================================
+
+  Содержит общие объекты передачи данных между stats-server и stats-client.
+
+  Основные DTO:
+    - EndpointHitDto - информация об обращении к эндпоинту
+    - ViewStatsDto   - результат статистики (app, uri, hits)
+
+  Родитель: stats-service (агрегатор статистики)
+  Артефакт: JAR (используется как зависимость в stats-server и stats-client)
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>ru.practicum</groupId>
         <artifactId>stats-service</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>stats-dto</artifactId>
+    <packaging>jar</packaging>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <dependencies>
+        <!-- Jakarta Validation - аннотации для валидации (@NotNull, @NotBlank и др.) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Lombok - генерация геттеров, сеттеров, билдеров -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
+        <!-- Jackson аннотации (@JsonFormat и др.) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <!-- Jackson Databind - сериализация/десериализация JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Jackson поддержка Java Time (LocalDateTime) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- Hibernate Validator - реализация Jakarta Validation -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+
+        <!-- Общий модуль с утилитами и константами -->
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>ewm-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- ======================================================================
+             ТЕСТОВЫЕ ЗАВИСИМОСТИ
+        -->
+<!--        &lt;!&ndash; JUnit Jupiter - тестирование &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.junit.jupiter</groupId>-->
+<!--            <artifactId>junit-jupiter</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+        <!-- AssertJ - fluent assertions для тестов -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Expression Language для Hibernate Validator в тестах -->
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+            <version>4.0.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>

@@ -227,12 +227,6 @@
                 <artifactId>jakarta.validation-api</artifactId>
                 <version>${jakarta.validation.version}</version>
             </dependency>
-
-            <!-- Jackson поддержка Java Time -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
