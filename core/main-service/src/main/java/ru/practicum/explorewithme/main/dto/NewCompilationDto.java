@@ -7,16 +7,24 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
+/**
+ * ============================================================================
+ * DTO ДЛЯ СОЗДАНИЯ НОВОЙ ПОДБОРКИ СОБЫТИЙ (Compilation)
+ * ============================================================================
+ */
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NewCompilationDto {
+
     @Builder.Default
     Boolean pinned = false;
+
     @NotBlank(message = "Название подборки не может быть пустым")
     @Size(max = 50, message = "Название подборки должно быть до 50 символов")
     String title;
+
     List<Long> events;
 }

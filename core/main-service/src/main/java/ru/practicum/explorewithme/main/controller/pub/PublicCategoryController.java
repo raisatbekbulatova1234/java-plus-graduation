@@ -13,6 +13,14 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+/**
+ * ============================================================================
+ * ПУБЛИЧНЫЙ КОНТРОЛЛЕР КАТЕГОРИЙ
+ * ============================================================================
+ *
+ * Обрабатывает запросы от неавторизованных пользователей для просмотра категорий.
+ * Доступен без аутентификации.
+ */
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
@@ -22,24 +30,29 @@ public class PublicCategoryController {
 
     private final CategoryService categoryService;
 
+    /**
+     * Получение списка всех категорий с пагинацией.
+     */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<CategoryDto> getAllCategories(
             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
             @RequestParam(defaultValue = "10") @Positive int size) {
-        log.info("Admin: Received request to get all categories with parameters: from {}, size {}", from, size);
+        log.info("Публичный: Получен запрос на получение всех категорий, from={}, size={}", from, size);
         List<CategoryDto> result = categoryService.getAllCategories(from, size);
-        log.info("Admin: Received list of categories: {}", result);
+        log.info("Публичный: Получен список категорий: {} шт.", result.size());
         return result;
     }
 
+    /**
+     * Получение категории по ID.
+     */
     @GetMapping("/{categoryId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto getCategoryById(@PathVariable Long categoryId) {
-        log.info("Admin: Received request to get category with Id: {}", categoryId);
+        log.info("Публичный: Получен запрос на получение категории с ID: {}", categoryId);
         CategoryDto result = categoryService.getCategoryById(categoryId);
-        log.info("Admin: Received category: {}", result);
+        log.info("Публичный: Получена категория: {}", result);
         return result;
     }
-
 }

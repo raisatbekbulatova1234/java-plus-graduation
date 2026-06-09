@@ -26,7 +26,7 @@ import ru.practicum.explorewithme.common.error.ApiError;
  * ответ в формате ApiError.
  */
 @RestControllerAdvice          // Перехватывает исключения во всех @RestController
-@Slf4j                         // Логирование
+@Slf4j
 @SuppressWarnings("unused")    // Подавляет предупреждения о неиспользуемых методах
 public class GlobalExceptionHandler {
 

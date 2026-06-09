@@ -20,6 +20,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import ru.practicum.explorewithme.main.service.params.AdminEventSearchParams;
 
+/**
+ * ============================================================================
+ * АДМИНИСТРАТИВНЫЙ КОНТРОЛЛЕР СОБЫТИЙ
+ * ============================================================================
+ *
+ * Обрабатывает запросы от администраторов для управления событиями.
+ * Позволяет искать события с фильтрацией, публиковать и отклонять события.
+ */
 @RestController
 @RequestMapping("/admin/events")
 @RequiredArgsConstructor
@@ -31,75 +39,61 @@ public class AdminEventController {
     private static final String DATETIME_FORMAT = DATE_TIME_FORMAT_PATTERN;
 
     /**
-     * Поиск событий администратором.
-     * Эндпоинт возвращает полную информацию обо всех событиях подходящих под переданные условия.
-     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список.
-     *
-     * @param users      список id пользователей, чьи события нужно найти
-     * @param states     список состояний в которых находятся искомые события
-     * @param categories список id категорий в которых будет вестись поиск
-     * @param rangeStart дата и время не раньше которых должно произойти событие
-     * @param rangeEnd   дата и время не позже которых должно произойти событие
-     * @param from       количество событий, которые нужно пропустить для формирования текущего набора
-     * @param size       количество событий в наборе
-     * @return Список EventFullDto
+     * Поиск событий администратором с фильтрацией.
+     * Возвращает полную информацию о событиях, подходящих под условия.
+     * Если ничего не найдено - возвращает пустой список.
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> searchEventsAdmin(
-        @RequestParam(name = "users", required = false) List<Long> users,
-        @RequestParam(name = "states", required = false) List<EventState> states,
-        @RequestParam(name = "categories", required = false) List<Long> categories,
-        @RequestParam(name = "rangeStart", required = false)
-        @DateTimeFormat(pattern = DATETIME_FORMAT) LocalDateTime rangeStart,
-        @RequestParam(name = "rangeEnd", required = false)
-        @DateTimeFormat(pattern = DATETIME_FORMAT) LocalDateTime rangeEnd,
-        @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
-        @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
+            @RequestParam(name = "users", required = false) List<Long> users,
+            @RequestParam(name = "states", required = false) List<EventState> states,
+            @RequestParam(name = "categories", required = false) List<Long> categories,
+            @RequestParam(name = "rangeStart", required = false)
+            @DateTimeFormat(pattern = DATETIME_FORMAT) LocalDateTime rangeStart,
+            @RequestParam(name = "rangeEnd", required = false)
+            @DateTimeFormat(pattern = DATETIME_FORMAT) LocalDateTime rangeEnd,
+            @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+            @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
 
-        log.info("Admin: Received request to search events with params: users={}, states={}, categories={}, " +
-                "rangeStart={}, rangeEnd={}, from={}, size={}",
-            users, states, categories, rangeStart, rangeEnd, from, size);
+        log.info("Админ: Получен запрос на поиск событий с параметрами: users={}, states={}, categories={}, " +
+                        "rangeStart={}, rangeEnd={}, from={}, size={}",
+                users, states, categories, rangeStart, rangeEnd, from, size);
 
-        AdminEventSearchParams params = AdminEventSearchParams.builder().users(users).states(states)
-            .categories(categories).rangeStart(rangeStart).rangeEnd(rangeEnd).build();
+        AdminEventSearchParams params = AdminEventSearchParams.builder()
+                .users(users)
+                .states(states)
+                .categories(categories)
+                .rangeStart(rangeStart)
+                .rangeEnd(rangeEnd)
+                .build();
 
-        List<EventFullDto> foundEvents = eventService.getEventsAdmin(
-            params,
-            from,
-            size
-        );
-        log.info("Admin: Found {} events for the given criteria.", foundEvents.size());
+        List<EventFullDto> foundEvents = eventService.getEventsAdmin(params, from, size);
+        log.info("Админ: Найдено {} событий по заданным критериям", foundEvents.size());
         return foundEvents;
     }
 
     /**
-     * Редактирование данных события и его статуса (отклонение/публикация) администратором.<br>
-     * Валидация данных не требуется (согласно старому ТЗ, но DTO содержит аннотации валидации).<br>
-     * Обратите внимание:
-     * <ul>
-     *     <li>дата начала изменяемого события должна быть не ранее чем за час от даты публикации. (Ожидается код ошибки 409)</li>
-     *     <li>событие можно публиковать, только если оно в состоянии ожидания публикации (Ожидается код ошибки 409)</li>
-     *     <li>событие можно отклонить, только если оно еще не опубликовано (Ожидается код ошибки 409)</li>
-     * </ul>
-     *
-     * @param eventId                   ID события
-     * @param updateEventAdminRequestDto Данные для изменения информации о событии
-     * @return Обновленное EventFullDto
+     * Модерация события администратором.
+     * Позволяет опубликовать или отклонить событие.
+     * Правила:
+     * - Дата события должна быть не ранее чем за час от даты публикации
+     * - Опубликовать можно только событие в статусе PENDING
+     * - Отклонить можно только неопубликованное событие
      */
     @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto moderateEventByAdmin(
-        @PathVariable Long eventId,
-        @Valid @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto) {
+            @PathVariable Long eventId,
+            @Valid @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto) {
 
-        log.info("Admin: Received request to moderate event id={} with data: {}",
-            eventId, updateEventAdminRequestDto);
+        log.info("Админ: Получен запрос на модерацию события id={} с данными: {}",
+                eventId, updateEventAdminRequestDto);
 
         EventFullDto moderatedEvent = eventService.moderateEventByAdmin(eventId, updateEventAdminRequestDto);
 
-        log.info("Admin: Event id={} moderated successfully. New state: {}",
-            eventId, moderatedEvent.getState());
+        log.info("Админ: Событие id={} успешно промодерировано. Новый статус: {}",
+                eventId, moderatedEvent.getState());
         return moderatedEvent;
     }
 }

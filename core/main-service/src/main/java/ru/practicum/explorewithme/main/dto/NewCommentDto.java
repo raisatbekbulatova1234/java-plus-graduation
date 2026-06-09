@@ -9,6 +9,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+/**
+ * ============================================================================
+ * DTO ДЛЯ СОЗДАНИЯ НОВОГО КОММЕНТАРИЯ
+ * ============================================================================
+ * Используется пользователем для добавления комментария к событию.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NewCommentDto {
 
-    @NotBlank(message = "Comment text cannot be blank.")
-    @Size(min = 1, max = 2000, message = "Comment text must be between 1 and 2000 characters.")
+    @NotBlank(message = "Текст комментария не может быть пустым")
+    @Size(min = 1, max = 2000, message = "Текст комментария должен быть от 1 до 2000 символов")
     String text;
 }

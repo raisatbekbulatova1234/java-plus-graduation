@@ -19,6 +19,14 @@ import java.util.List;
 
 import static ru.practicum.explorewithme.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
 
+/**
+ * ============================================================================
+ * ПУБЛИЧНЫЙ КОНТРОЛЛЕР СОБЫТИЙ
+ * ============================================================================
+ *
+ * Обрабатывает запросы от неавторизованных пользователей для просмотра событий.
+ * Доступен без аутентификации.
+ */
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
@@ -28,6 +36,10 @@ public class PublicEventController {
 
     private final EventService eventService;
 
+    /**
+     * Поиск событий с фильтрацией и пагинацией
+     * Аннотация @LogStatsHit - логирует обращение в сервис статистики
+     */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @LogStatsHit
@@ -45,7 +57,7 @@ public class PublicEventController {
             @RequestParam(name = "size", defaultValue = "10") @Positive int size,
             @RequestHeader(name = "X-Real-IP", required = false) String ipAddress) {
 
-        log.info("Public: Received request to get events with params: text={}, categories={}, paid={}, " +
+        log.info("Публичный: Получен запрос на поиск событий с параметрами: text={}, categories={}, paid={}, " +
                         "rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
 
@@ -60,19 +72,23 @@ public class PublicEventController {
                 .build();
 
         List<EventShortDto> events = eventService.getEventsPublic(params, from, size);
-        log.info("Public: Found {} events", events.size());
+        log.info("Публичный: Найдено {} событий", events.size());
         return events;
     }
 
+    /**
+     * Получение полной информации о событии по ID.
+     * Аннотация @LogStatsHit - логирует просмотр события в сервис статистики
+     */
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     @LogStatsHit
     public EventFullDto getEventById(
             @PathVariable @Positive Long eventId,
             @RequestHeader(name = "X-Real-IP", required = false) String ipAddress) {
-        log.info("Public: Received request to get event with id={}", eventId);
+        log.info("Публичный: Получен запрос на получение события с id={}", eventId);
         EventFullDto event = eventService.getEventByIdPublic(eventId);
-        log.info("Public: Found event: {}", event);
+        log.info("Публичный: Найдено событие: {}", event);
         return event;
     }
 }

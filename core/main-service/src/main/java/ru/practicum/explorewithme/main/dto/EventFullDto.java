@@ -12,31 +12,56 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.explorewithme.main.model.EventState;
 import ru.practicum.explorewithme.main.model.Location;
-
+/**
+ * ============================================================================
+ * ПОЛНЫЙ DTO ДЛЯ СОБЫТИЯ (Event Full)
+ * ============================================================================
+ *
+ * Используется для отображения полной информации о событии:
+ * - Детальная страница события
+ * - Административный интерфейс
+ * - API для инициатора события
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventFullDto {
+
     Long id;
     String annotation;
+
     CategoryDto category;
+
     Long confirmedRequests;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT_PATTERN)
     LocalDateTime createdOn;
+
     String description;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT_PATTERN)
     LocalDateTime eventDate;
+
     UserShortDto initiator;
+
     Location location;
+
     boolean paid;
+
     int participantLimit;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT_PATTERN)
     LocalDateTime publishedOn;
+
     boolean requestModeration;
+
     EventState state;
+
     String title;
+
     Long views;
+
     boolean commentsEnabled;
 }

@@ -11,7 +11,16 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 
 import static ru.practicum.explorewithme.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
-
+/**
+ * ============================================================================
+ * DTO ДЛЯ КОММЕНТАРИЯ (ПОЛЬЗОВАТЕЛЬСКИЙ API)
+ * ============================================================================
+ *
+ * Используется для отображения комментария обычным пользователям.
+ *
+ * Отличия от CommentAdminDto:
+ * - НЕ содержит поле isDeleted (обычные пользователи не видят удалённые комментарии)
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

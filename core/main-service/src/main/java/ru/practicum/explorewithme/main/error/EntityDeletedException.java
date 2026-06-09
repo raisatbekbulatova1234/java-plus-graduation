@@ -7,6 +7,6 @@ public class EntityDeletedException  extends RuntimeException {
     }
 
     public EntityDeletedException(String entityName, String fieldName, Object value) {
-        super(String.format("Entity restriction of removal %s with %s = '%s' - not empty", entityName, fieldName, value));
+        super(String.format("Ограничение на удаление %s с %s = '%s' - не пустая", entityName, fieldName, value));
     }
 }

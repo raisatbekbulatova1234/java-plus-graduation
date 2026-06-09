@@ -7,6 +7,6 @@ public class EntityNotFoundException extends RuntimeException {
     }
 
     public EntityNotFoundException(String entityName, String fieldName, Object value) {
-        super(String.format("%s with %s = '%s' not found", entityName, fieldName, value));
+        super(String.format("%s с %s = '%s' не найден", entityName, fieldName, value));
     }
 }

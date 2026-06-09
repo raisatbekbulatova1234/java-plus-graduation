@@ -4,7 +4,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
+/**
+ * ============================================================================
+ * DTO ДЛЯ СОЗДАНИЯ НОВОЙ КАТЕГОРИИ (Category)
+ * ============================================================================
+ * Используется администратором для добавления новой категории событий.
+ */
 @Data
 @Builder
 @NoArgsConstructor

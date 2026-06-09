@@ -14,7 +14,12 @@ import ru.practicum.explorewithme.main.model.Location;
 import java.time.LocalDateTime;
 
 import static ru.practicum.explorewithme.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
-
+/**
+ * ============================================================================
+ * DTO ДЛЯ СОЗДАНИЯ НОВОГО СОБЫТИЯ
+ * ============================================================================
+ * Используется пользователем для создания нового события.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

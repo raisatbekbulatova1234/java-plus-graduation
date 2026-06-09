@@ -12,6 +12,14 @@ import ru.practicum.explorewithme.main.model.Location;
 
 import java.time.LocalDateTime;
 
+/**
+ * ============================================================================
+ * DTO ДЛЯ ОБНОВЛЕНИЯ СОБЫТИЯ ПОЛЬЗОВАТЕЛЕМ
+ * ============================================================================
+ *
+ * Используется пользователем для редактирования своего события.
+ * Все поля опциональны (обновляются только переданные значения).
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,34 +27,67 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateEventUserRequestDto {
 
-    @Size(min = 20, max = 2000, message = "Annotation length must be between 20 and 2000 characters")
+    /**
+     * Краткая аннотация события.
+     */
+    @Size(min = 20, max = 2000, message = "Длина аннотации должна быть от 20 до 2000 символов")
     String annotation;
 
+    /**
+     * ID категории события (можно изменить).
+     */
     Long category;
 
-    @Size(min = 20, max = 7000, message = "Description length must be between 20 and 7000 characters")
+    /**
+     * Полное описание события.
+     */
+    @Size(min = 20, max = 7000, message = "Длина описания должна быть от 20 до 7000 символов")
     String description;
 
+    /**
+     * Дата и время проведения события.
+     * Должна быть в будущем.
+     * Формат: согласно DATE_TIME_FORMAT_PATTERN.
+     */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT_PATTERN)
-    @Future(message = "Event date must be in the future")
+    @Future(message = "Дата события должна быть в будущем")
     LocalDateTime eventDate;
 
+    /**
+     * Местоположение события (широта и долгота).
+     */
     Location location;
 
+    /**
+     * Флаг платного участия.
+     * true - платное, false - бесплатное.
+     */
     Boolean paid;
 
-    @PositiveOrZero(message = "Participant limit must be positive or zero")
+    /**
+     * Лимит участников события.
+     */
+    @PositiveOrZero(message = "Лимит участников должен быть положительным или нулём")
     Integer participantLimit;
 
+    /**
+     * Требуется ли модерация заявок на участие.
+     */
     Boolean requestModeration;
 
     StateActionUser stateAction;
 
-    @Size(min = 3, max = 120, message = "Title length must be between 3 and 120 characters")
+    /**
+     * Заголовок события.
+     */
+    @Size(min = 3, max = 120, message = "Длина заголовка должна быть от 3 до 120 символов")
     String title;
 
+    /**
+     * Перечисление возможных действий пользователя с событием.
+     */
     public enum StateActionUser {
-        SEND_TO_REVIEW,
-        CANCEL_REVIEW
+        SEND_TO_REVIEW,   // Отправить на модерацию
+        CANCEL_REVIEW     // Отменить модерацию
     }
 }
