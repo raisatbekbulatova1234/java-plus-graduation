@@ -1,20 +1,71 @@
-server:
-  port: 8080
-
-stats-server:
-  url: http://stats-server:9090
+# ============================================================================
+# MAIN SERVICE - КОНФИГУРАЦИЯ
+# ============================================================================
+# Основной сервис бизнес-логики. Подключается к Config Server для получения
+# конфигурации, регистрируется в Eureka для service discovery.
+# ============================================================================
 
 spring:
+  # --------------------------------------------------------------------------
+  # Идентификация сервиса (отображается в Eureka Dashboard)
+  # --------------------------------------------------------------------------
   application:
     name: main-service
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always
+
+  # --------------------------------------------------------------------------
+  # Активные профили
+  # postgres - использование PostgreSQL (production)
+  # --------------------------------------------------------------------------
+  profiles:
+    active: postgres
+
+  # --------------------------------------------------------------------------
+  # CONFIG SERVER CLIENT
+  # Импорт конфигурации с удалённого сервера (config-server)
+  # --------------------------------------------------------------------------
+  config:
+    import: "configserver:"
+
+  # --------------------------------------------------------------------------
+  # CONFIG SERVER DISCOVERY
+  # enabled: true      - искать config-server через Eureka (не по статическому URL)
+  # serviceId: config-server - имя сервиса в Eureka (должно совпадать с spring.application.name у config-server)
+  # --------------------------------------------------------------------------
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+
+      # fail-fast: true - при недоступности config-server приложение падает сразу
+      # (не ждёт, а завершается с ошибкой)
+      fail-fast: true
+
+      # ----------------------------------------------------------------------
+      # Политика повторных попыток подключения к config-server
+      # max-attempts: 10        - максимальное число попыток
+      # initial-interval: 1000  - начальная задержка 1 секунда
+      # useRandomPolicy: true    - случайное увеличение интервала (чтобы не нагружать сервер)
+      # ----------------------------------------------------------------------
+      retry:
+        max-attempts: 10
+        initial-interval: 1000
+        useRandomPolicy: true
+
+# ============================================================================
+# EUREKA CLIENT - РЕГИСТРАЦИЯ В DISCOVERY SERVER
+# ============================================================================
+eureka:
+  client:
+    # Адрес Eureka сервера (можно переопределить через переменную окружения)
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+
+  instance:
+    # Уникальный идентификатор экземпляра (важно для масштабирования)
+    # spring.application.name + random.value = main-service:uuid
+    instance-id: "${spring.application.name}:${random.value}"
+
+    # Интервал отправки heartbeat (признак жизни) - 10 секунд
+    leaseRenewalIntervalInSeconds: 10
+    # По умолчанию lease-expiration-duration-in-seconds = 90 сек (3 пропущенных heartbeat)

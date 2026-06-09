@@ -1,108 +1,232 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  MAIN SERVICE MODULE POM
+  ============================================================================
+  Основной сервис бизнес-логики проекта "Explore With Me".
+
+  Родитель: core (агрегатор бизнес-модулей)
+
+  Функциональность:
+    - Управление событиями (CRUD, публикация, модерация)
+    - Пользователи и подписки
+    - Комментарии и рейтинги
+    - Категории и подборки
+    - Запросы на участие
+    - Интеграция со stats-service (просмотры, статистика)
+
+  Технологии:
+    - Spring Boot Web (REST API)
+    - Spring Data JPA + QueryDSL (типобезопасные запросы)
+    - PostgreSQL (основная БД)
+    - Eureka Client (регистрация в discovery-server)
+    - Config Client (получение конфигурации)
+    - OpenFeign (клиент для stats-service)
+    - MapStruct (маппинг DTO/Entity)
+    - Lombok (генерация кода)
+    - Testcontainers + H2 (тестирование)
+  ============================================================================
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>ru.practicum</groupId>
-    <artifactId>explore-with-me</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>main-service</artifactId>
-  <packaging>jar</packaging>
+    <parent>
+        <groupId>ru.practicum</groupId>
+        <artifactId>core</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ru.practicum</groupId>
-      <artifactId>stats-client</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ru.practicum</groupId>
-      <artifactId>stats-dto</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ru.practicum</groupId>
-      <artifactId>ewm-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.querydsl</groupId>
-      <artifactId>querydsl-apt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.querydsl</groupId>
-      <artifactId>querydsl-jpa</artifactId>
-      <classifier>jakarta</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-aop</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>testcontainers</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+    <!-- ========================================================================
+         КООРДИНАТЫ МОДУЛЯ
+         ======================================================================== -->
+    <artifactId>main-service</artifactId>
+    <packaging>jar</packaging>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
+    <!-- ========================================================================
+         ЗАВИСИМОСТИ
+         ======================================================================== -->
+    <dependencies>
+        <!-- ================================================================
+             SPRING BOOT STARTERS
+             ================================================================ -->
+        <!-- Web: REST API, встроенный Tomcat, Spring MVC -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- JPA: работа с БД, репозитории, транзакции -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Validation: валидация DTO (@NotNull, @Size и т.д.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- AOP: аспекты для логирования, метрик, кэширования -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- Actuator: метрики, health check, мониторинг -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ================================================================
+             SPRING CLOUD (микросервисная инфраструктура)
+             ================================================================ -->
+        <!-- Eureka Client: регистрация в discovery-server -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+
+        <!-- Config Client: получение конфигурации с config-server -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+
+        <!-- OpenFeign: декларативный HTTP клиент для вызова stats-service -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <!-- ================================================================
+             ВНУТРЕННИЕ МОДУЛИ ПРОЕКТА
+             ================================================================ -->
+        <!-- Stats Server API (описание эндпоинтов) -->
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>stats-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Stats Client (Feign клиент для вызова статистики) -->
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>stats-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Stats DTO (общие объекты для статистики) -->
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>stats-dto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- EWM Common (общие утилиты, исключения, конфиги) -->
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>ewm-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- ================================================================
+             БАЗА ДАННЫХ
+             ================================================================ -->
+        <!-- PostgreSQL: основная БД -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- H2: тестовая БД (in-memory) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ================================================================
+             ГЕНЕРАЦИЯ КОДА
+             ================================================================ -->
+        <!-- Lombok: автоматическая генерация геттеров/сеттеров, конструкторов -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MapStruct: маппинг DTO ↔ Entity на этапе компиляции -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <!-- QueryDSL APT: генерация Q-классов для типобезопасных запросов -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- QueryDSL JPA: реализация типобезопасных запросов -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+            <classifier>jakarta</classifier>
+        </dependency>
+
+        <!-- ================================================================
+             ТЕСТИРОВАНИЕ
+             ================================================================ -->
+        <!-- Spring Boot Test: юнит-тесты -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers: интеграционные тесты с реальной PostgreSQL -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ========================================================================
+         СБОРКА
+         ======================================================================== -->
+    <build>
+        <plugins>
+            <!-- Compiler Plugin с поддержкой Lombok + MapStruct + QueryDSL -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
+            <!-- Spring Boot Plugin: создание executable JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
