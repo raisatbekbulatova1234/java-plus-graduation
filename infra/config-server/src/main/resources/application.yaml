@@ -1,0 +1,49 @@
+# ============================================================================
+# CONFIG-SERVER - КОНФИГУРАЦИЯ
+# ============================================================================
+# Spring Cloud Config Server - централизованное управление конфигурациями.
+# Использует профиль native (файловая система вместо Git).
+# ============================================================================
+
+server:
+  port: ${PORT:0}                      # Порт (0 - случайный свободный порт)
+
+spring:
+  application:
+    name: config-server                # Имя сервиса
+
+  profiles:
+    active: native                     # Режим "native" (файлы в classpath)
+
+  cloud:
+    config:
+      server:
+        native:
+          searchLocations:             # Где искать файлы конфигураций
+            - classpath:config         # /config/*.yml
+            - classpath:config/{application}  # /config/{app-name}/*.yml
+
+# ============================================================================
+# EUREKA CLIENT - РЕГИСТРАЦИЯ В DISCOVERY SERVER
+# ============================================================================
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+
+  instance:
+    prefer-ip-address: true            # Регистрироваться по IP, а не по hostname
+
+# ============================================================================
+# ACTUATOR - МОНИТОРИНГ
+# ============================================================================
+management:
+  endpoint:
+    health:
+      show-details: always             # Детали статуса здоровья
+      probes:
+        enabled: true                  # Kubernetes liveness/readiness probes
+  endpoints:
+    web:
+      exposure:
+        include: health, info          # Доступные эндпоинты

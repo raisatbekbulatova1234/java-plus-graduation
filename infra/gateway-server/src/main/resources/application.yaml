@@ -1,0 +1,46 @@
+# ============================================================================
+# GATEWAY-SERVER - КОНФИГУРАЦИЯ
+# ============================================================================
+# API Gateway - единая точка входа для всех микросервисов.
+#
+# Основные функции:
+#   - Маршрутизация запросов к backend-сервисам
+#   - Балансировка нагрузки через Eureka
+#   - Фильтры: Retry (повторы), Circuit Breaker (защита от сбоев)
+#   - Fallback-обработка ошибок
+#
+# Порт по умолчанию: 8080 (задаётся в конфигурации gateway.yml)
+# ============================================================================
+
+spring:
+  application:
+    name: gateway-server                      # Имя сервиса (регистрируется в Eureka)
+
+  # --------------------------------------------------------------------------
+  # CONFIG SERVER CLIENT
+  # --------------------------------------------------------------------------
+  config:
+    import: "configserver:"                   # Импорт конфигурации с config-server
+
+  cloud:
+    config:
+      discovery:
+        enabled: true                         # Искать config-server через Eureka
+        serviceId: config-server              # Имя config-server в Eureka
+      fail-fast: true                         # Падать при старте, если config-server недоступен
+      retry:
+        max-attempts: 10                      # Максимум попыток подключения
+        initial-interval: 1000                # Начальная задержка 1 секунда
+        useRandomPolicy: true                 # Случайное увеличение интервала
+
+# ============================================================================
+# EUREKA CLIENT - РЕГИСТРАЦИЯ В DISCOVERY SERVER
+# ============================================================================
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}  # Адрес Eureka сервера
+
+  instance:
+    instance-id: "${spring.application.name}:${random.value}"    # Уникальный ID экземпляра
+    leaseRenewalIntervalInSeconds: 10          # Интервал отправки heartbeat (признак жизни)
