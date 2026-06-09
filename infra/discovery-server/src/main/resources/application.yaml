@@ -1,0 +1,23 @@
+# ============================================================================
+# Конфигурация Discovery Server (Eureka)
+# ============================================================================
+
+server:
+  port: 8761                    # Порт сервера обнаружения (стандартный для Eureka)
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}   # Хост сервера (можно переопределить переменной)
+
+  client:
+    # Режим standalone сервера (не регистрирует сам себя)
+    registerWithEureka: false   # Отключает регистрацию сервера в себе же
+    fetchRegistry: false        # Отключает скачивание реестра с других серверов
+
+    serviceUrl:
+      # Адрес для регистрации (нужен даже в standalone режиме)
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+spring:
+  application:
+    name: discovery-server       # Имя сервиса (будет видно в Eureka dashboard)

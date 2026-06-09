@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  INFRASTRUCTURE MODULE POM
+  ============================================================================
+  Агрегатор для всех инфраструктурных сервисов микросервисной архитектуры.
+  Сам не содержит кода, только объединяет дочерние модули.
+
+  Родитель: explore-with-me (главный POM проекта)
+  Дочерние модули:
+    - config-server    → централизованное управление конфигурациями
+    - discovery-server → регистрация и обнаружение сервисов (Eureka)
+    - gateway-server   → API Gateway (маршрутизация, фильтры)
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ru.practicum</groupId>
+        <artifactId>explore-with-me</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>infra</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>config-server</module>    <!-- Spring Cloud Config -->
+        <module>discovery-server</module> <!-- Netflix Eureka -->
+        <module>gateway-server</module>   <!-- Spring Cloud Gateway -->
+    </modules>
+</project>
