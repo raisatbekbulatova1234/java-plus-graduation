@@ -1,20 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  МОДУЛЬ CONFIG-SERVER (СЕРВЕР КОНФИГУРАЦИИ)
+  ============================================================================
+
+  Spring Cloud Config Server - централизованное управление конфигурациями
+  для всех микросервисов проекта.
+
+  Основные функции:
+    - Хранение конфигураций в Git-репозитории
+    - Предоставление конфигураций по запросу через HTTP API
+    - Поддержка профилей (postgres, test)
+    - Шифрование чувствительных данных (опционально)
+
+  Родитель: infra (агрегатор инфраструктурных сервисов)
+  Артефакт: executable JAR
+
+  Порт по умолчанию: 8888
+  URL: http://localhost:8888/{application}/{profile}
+  Пример: http://localhost:8888/main-service/postgres
+
+  Использование в микросервисах:
+    spring.config.import: "configserver:"
+    spring.cloud.config.discovery.enabled: true
+    spring.cloud.config.discovery.serviceId: config-server
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>ru.practicum</groupId>
         <artifactId>infra</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>config-server</artifactId>
+    <packaging>jar</packaging>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <dependencies>
+        <!-- Spring Cloud Config Server - основной компонент -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-server</artifactId>
+        </dependency>
+
+        <!-- Actuator - метрики, health check -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Eureka Client - регистрация в discovery-server -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin - создание executable JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

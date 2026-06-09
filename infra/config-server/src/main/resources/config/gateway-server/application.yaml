@@ -1,0 +1,138 @@
+# ============================================================================
+# GATEWAY-SERVER - КОНФИГУРАЦИЯ
+# ============================================================================
+# Spring Cloud Gateway - единая точка входа для всех микросервисов.
+#
+# Основные функции:
+#   - Маршрутизация запросов к соответствующим сервисам (main-service)
+#   - Балансировка нагрузки через Service Discovery (lb://)
+#   - Фильтры: Retry (повтор запросов), CircuitBreaker (защита от сбоев)
+#   - Автоматическое восстановление (retries, fallback, circuit breaker)
+# ============================================================================
+
+server:
+  port: ${PORT:8080}                     # Порт сервера (можно переопределить)
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false             # Отключаем автоматическое создание маршрутов
+
+          # --------------------------------------------------------------------
+          # ГЛОБАЛЬНЫЕ ФИЛЬТРЫ (применяются ко всем маршрутам)
+          # --------------------------------------------------------------------
+          default-filters:
+            # Фильтр повторных попыток при ошибках сервисов
+            - name: Retry
+              args:
+                retries: 3                # Максимум 3 повторные попытки
+                statuses:                # Коды HTTP, при которых повторяем
+                  - SERVICE_UNAVAILABLE  # 503
+                  - BAD_GATEWAY          # 502
+                  - GATEWAY_TIMEOUT      # 504
+                methods:                 # Повторяем только для GET запросов
+                  - GET
+                backoff:                 # Задержка между попытками
+                  firstBackoff: 25ms      # Первая задержка 25 мс
+                  maxBackoff: 300ms       # Максимальная задержка 300 мс
+                  factor: 2               # Увеличение задержки в 2 раза
+                  basedOnPreviousValue: false
+
+            # Фильтр Circuit Breaker (защита от каскадных отказов)
+            - name: CircuitBreaker
+              args:
+                name: default-breaker     # Имя экземпляра circuit breaker
+                fallbackUri: forward:/service-fallback  # fallback при размыкании
+
+          # --------------------------------------------------------------------
+          # МАРШРУТЫ (routes)
+          # --------------------------------------------------------------------
+          routes:
+            # Административные эндпоинты main-service
+            - id: main-service-admin-route
+              uri: lb://main-service       # Балансировка нагрузки через Eureka
+              predicates:
+                - Path=/admin/**           # Запросы вида /admin/...
+
+            # Приватные эндпоинты пользователей
+            - id: main-service-users-route
+              uri: lb://main-service
+              predicates:
+                - Path=/users/**           # Запросы вида /users/...
+
+            # Публичные категории
+            - id: main-service-categories-route
+              uri: lb://main-service
+              predicates:
+                - Path=/categories/**      # Запросы вида /categories/...
+
+            # Публичные события
+            - id: main-service-events-route
+              uri: lb://main-service
+              predicates:
+                - Path=/events/**          # Запросы вида /events/...
+
+            # Публичные подборки
+            - id: main-service-compilations-route
+              uri: lb://main-service
+              predicates:
+                - Path=/compilations/**    # Запросы вида /compilations/...
+
+    # ------------------------------------------------------------------------
+    # НАСТРОЙКИ БАЛАНСИРОВЩИКА НАГРУЗКИ
+    # ------------------------------------------------------------------------
+    loadbalancer:
+      enabled: true                        # Включаем балансировку
+      retry:
+        enabled: false                     # Отключаем каскадные повторные попытки
+      cache:
+        enabled: true                      # Кэширование информации о сервисах
+        ttl: 30s                           # Время жизни кэша 30 секунд
+
+# ============================================================================
+# RESILIENCE4J - НАСТРОЙКИ CIRCUIT BREAKER
+# ============================================================================
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED    # Окно скользящее, основано на количестве вызовов
+        slidingWindowSize: 20             # Анализируем последние 20 вызовов
+        failureRateThreshold: 50          # При 50% ошибок размыкаем цепь
+        waitDurationInOpenState: 10s      # Восстановление через 10 секунд
+        permittedNumberOfCallsInHalfOpenState: 3  # Пробных вызовов в полуоткрытом состоянии
+        slowCallRateThreshold: 50         # Медленные вызовы считаем ошибками
+        slowCallDurationThreshold: 2s     # Вызов дольше 2с считается медленным
+
+    instances:
+      default-breaker:
+        baseConfig: default               # Используем конфигурацию default
+
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 4s               # Таймаут выполнения 4 секунды
+
+# ============================================================================
+# ACTUATOR - МОНИТОРИНГ
+# ============================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway       # Доступные эндпоинты
+  endpoint:
+    health:
+      probes:
+        enabled: true                      # Kubernetes liveness/readiness probes
+    gateway:
+      enabled: true                        # Эндпоинт /actuator/gateway
+  health:
+    livenessstate:
+      enabled: true                        # Liveness probe
+    readinessstate:
+      enabled: true                        # Readiness probe
