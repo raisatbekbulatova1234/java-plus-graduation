@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ============================================================================
-  МНОГОМОДУЛЬНЫЙ MAVEN POM ДЛЯ ПРОЕКТА "EXPLORE WITH ME"
+  ГЛАВНЫЙ ПОМ ПРОЕКТА EXPLORE WITH ME
   ============================================================================
-  Технологический стек:
-    - Java 21 (LTS)
-    - Spring Boot 3.5.5
-    - Spring Cloud 2025.0.0
-    - PostgreSQL 42.7.5
-    - QueryDSL 5.1.0 (типобезопасные запросы)
-    - MapStruct 1.6.3 (маппинг DTO/Entity)
-    - Lombok 1.18.38 (генерация кода)
-    - Testcontainers 1.21.0 (интеграционные тесты)
+  Многомодульный Maven проект для платформы анонсов и участия в событиях.
 
-  Архитектура:
-    - infra  - общие компоненты, утилиты, конфигурации, клиенты
-    - core   - основная бизнес-логика (контроллеры, сервисы, репозитории)
+  Модули:
+    - core   → бизнес-логика (main-service, stats-service, ewm-common)
+    - infra  → инфраструктура (config-server, discovery-server, gateway-server)
 
-  Сборка:
-    - mvn clean install               - полная сборка
-    - mvn test -Pcheck                - запуск тестов с проверкой стиля и статическим анализом
-    - mvn verify -Pcoverage           - сборка с проверкой покрытия кода
-    - mvn clean install -Pcheck,coverage - полная проверка + покрытие
-  ============================================================================
+  Сборка: mvn clean install
+  Профили: mvn verify -Pcheck (проверка стиля и багов)
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -30,17 +18,17 @@
 
     <!-- ========================================================================
          РОДИТЕЛЬСКИЙ ПОМ SPRING BOOT
-         Обеспечивает централизованное управление версиями Spring-зависимостей
+         Управляет версиями всех Spring зависимостей
          ======================================================================== -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.5.5</version>
         <relativePath/>
     </parent>
 
     <!-- ========================================================================
-         ОСНОВНЫЕ КООРДИНАТЫ ПРОЕКТА
+         КООРДИНАТЫ ПРОЕКТА
          ======================================================================== -->
     <groupId>ru.practicum</groupId>
     <artifactId>explore-with-me</artifactId>
@@ -51,45 +39,42 @@
     <description>Event exploration and participation platform</description>
 
     <!-- ========================================================================
-         МОДУЛИ
-         Двухуровневая архитектура для разделения инфраструктуры и бизнес-логики
+         МОДУЛИ ПРОЕКТА
          ======================================================================== -->
     <modules>
-        <module>core</module>
-        <module>infra</module>
+        <module>core</module>   <!-- Бизнес-логика -->
+        <module>infra</module>  <!-- Инфраструктура -->
     </modules>
 
     <!-- ========================================================================
-         СВОЙСТВА ПРОЕКТА
-         Централизованное управление версиями всех зависимостей
+         ВЕРСИИ ЗАВИСИМОСТЕЙ
          ======================================================================== -->
     <properties>
-        <!-- Кодировка и Java -->
+        <!-- Кодировки и Java -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
 
-        <!-- Версии Spring (используем parent версию для Spring Boot) -->
+        <!-- Spring Cloud -->
         <spring-cloud.version>2025.0.0</spring-cloud.version>
 
         <!-- База данных -->
         <postgresql.version>42.7.5</postgresql.version>
 
-<!--        &lt;!&ndash; Инструменты тестирования &ndash;&gt;-->
-<!--        <okhttp3.version>4.12.0</okhttp3.version>-->
-<!--        <testcontainers.version>1.21.0</testcontainers.version>-->
-<!--        <junit.version>5.10.5</junit.version>-->
+        <!-- Тестирование -->
+        <okhttp3.version>4.12.0</okhttp3.version>
+        <testcontainers.version>1.21.0</testcontainers.version>
 
-        <!-- Генерация кода и утилиты -->
+        <!-- Генерация кода -->
         <lombok.version>1.18.38</lombok.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <querydsl.version>5.1.0</querydsl.version>
 
-        <!-- Аннотации и валидация -->
+        <!-- Аннотации -->
         <jetbrains.annotations.version>24.0.1</jetbrains.annotations.version>
         <jakarta.validation.version>3.1.0</jakarta.validation.version>
 
-        <!-- Плагины -->
+        <!-- Плагины Maven -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
@@ -97,22 +82,21 @@
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <checkstyle.version>10.20.2</checkstyle.version>
 
-<!--        &lt;!&ndash; Пороги покрытия кода (улучшены с 20% до 80%) &ndash;&gt;-->
-<!--        <jacoco.coverage.instruction.min>0.80</jacoco.coverage.instruction.min>-->
-<!--        <jacoco.coverage.line.min>0.80</jacoco.coverage.line.min>-->
-<!--        <jacoco.coverage.branch.min>0.70</jacoco.coverage.branch.min>-->
-<!--        <jacoco.coverage.complexity.min>0.70</jacoco.coverage.complexity.min>-->
-<!--        <jacoco.coverage.method.min>0.80</jacoco.coverage.method.min>-->
-<!--        <jacoco.missed.class.max>0</jacoco.missed.class.max>-->
+        <!-- Пороги покрытия кода (80% - минимальный порог) -->
+        <jacoco.coverage.instruction.min>0.80</jacoco.coverage.instruction.min>
+        <jacoco.coverage.line.min>0.80</jacoco.coverage.line.min>
+        <jacoco.coverage.branch.min>0.70</jacoco.coverage.branch.min>
+        <jacoco.coverage.complexity.min>0.70</jacoco.coverage.complexity.min>
+        <jacoco.coverage.method.min>0.80</jacoco.coverage.method.min>
+        <jacoco.missed.class.max>0</jacoco.missed.class.max>
     </properties>
 
     <!-- ========================================================================
          УПРАВЛЕНИЕ ЗАВИСИМОСТЯМИ
-         Все версии централизованно определены в свойствах выше
          ======================================================================== -->
     <dependencyManagement>
         <dependencies>
-            <!-- SPRING CLOUD BOM -->
+            <!-- Spring Cloud BOM -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -121,19 +105,14 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- ================================================================
-                 БАЗА ДАННЫХ
-                 ================================================================ -->
+            <!-- PostgreSQL драйвер -->
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
             </dependency>
 
-            <!-- ================================================================
-                 ТЕСТИРОВАНИЕ
-                 ================================================================ -->
-            <!-- MockWebServer для HTTP тестов -->
+            <!-- MockWebServer для тестирования HTTP клиентов -->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>mockwebserver</artifactId>
@@ -141,19 +120,15 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- Testcontainers для интеграционных тестов с реальной БД -->
+            <!-- Testcontainers для интеграционных тестов -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.testcontainers</groupId>-->
-<!--                <artifactId>junit-jupiter</artifactId>-->
-<!--                <version>${testcontainers.version}</version>-->
-<!--                <scope>test</scope>-->
-<!--            </dependency>-->
+
+            <!-- Testcontainers PostgreSQL -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>postgresql</artifactId>
@@ -161,17 +136,6 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- JUnit 5 -->
-<!--            <dependency>-->
-<!--                <groupId>org.junit.jupiter</groupId>-->
-<!--                <artifactId>junit-jupiter</artifactId>-->
-<!--                <version>${junit.version}</version>-->
-<!--                <scope>test</scope>-->
-<!--            </dependency>-->
-
-            <!-- ================================================================
-                 ГЕНЕРАЦИЯ КОДА И УТИЛИТЫ
-                 ================================================================ -->
             <!-- Lombok -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -210,9 +174,6 @@
                 <version>${querydsl.version}</version>
             </dependency>
 
-            <!-- ================================================================
-                 АННОТАЦИИ И ВАЛИДАЦИЯ
-                 ================================================================ -->
             <!-- JetBrains аннотации (@NotNull, @Nullable) -->
             <dependency>
                 <groupId>org.jetbrains</groupId>
@@ -236,10 +197,7 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- ================================================================
-                     Maven Compiler Plugin
-                     Настройка Java 21 и аннотационных процессоров
-                     ================================================================ -->
+                <!-- Maven Compiler Plugin с поддержкой аннотационных процессоров -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -267,20 +225,20 @@
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${mapstruct.version}</version>
                             </path>
-                            <!-- QueryDSL APT (Jakarta EE версия) -->
+                            <!-- QueryDSL APT -->
                             <path>
                                 <groupId>com.querydsl</groupId>
                                 <artifactId>querydsl-apt</artifactId>
                                 <version>${querydsl.version}</version>
                                 <classifier>jakarta</classifier>
                             </path>
-                            <!-- Jakarta Persistence API для QueryDSL -->
+                            <!-- Jakarta Persistence -->
                             <path>
                                 <groupId>jakarta.persistence</groupId>
                                 <artifactId>jakarta.persistence-api</artifactId>
                                 <version>3.1.0</version>
                             </path>
-                            <!-- Jakarta Annotations для @Generated -->
+                            <!-- Jakarta Annotations -->
                             <path>
                                 <groupId>jakarta.annotation</groupId>
                                 <artifactId>jakarta.annotation-api</artifactId>
@@ -291,10 +249,7 @@
                     </configuration>
                 </plugin>
 
-                <!-- ================================================================
-                     Maven Surefire Plugin
-                     Запуск тестов с изоляцией процессов
-                     ================================================================ -->
+                <!-- Maven Surefire Plugin (запуск тестов) -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -306,45 +261,6 @@
                             <spring.profiles.active>test</spring.profiles.active>
                         </systemPropertyVariables>
                         <argLine>${surefire.argline}</argLine>
-                    </configuration>
-                </plugin>
-
-                <!-- ================================================================
-                     Maven Checkstyle Plugin
-                     Проверка стиля кода
-                     ================================================================ -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${maven-checkstyle-plugin.version}</version>
-                    <configuration>
-                        <configLocation>checkstyle.xml</configLocation>
-                        <failOnViolation>true</failOnViolation>
-                        <logViolationsToConsole>true</logViolationsToConsole>
-                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.puppycrawl.tools</groupId>
-                            <artifactId>checkstyle</artifactId>
-                            <version>${checkstyle.version}</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-
-                <!-- ================================================================
-                     SpotBugs Plugin
-                     Статический анализ кода (замена FindBugs)
-                     ================================================================ -->
-                <plugin>
-                    <groupId>com.github.spotbugs</groupId>
-                    <artifactId>spotbugs-maven-plugin</artifactId>
-                    <version>${spotbugs-maven-plugin.version}</version>
-                    <configuration>
-                        <effort>Max</effort>
-                        <threshold>Low</threshold>
-                        <failOnError>true</failOnError>
-                        <includeTests>true</includeTests>
                     </configuration>
                 </plugin>
             </plugins>
@@ -361,17 +277,14 @@
 
     <!-- ========================================================================
          MAVEN PROFILES
-         Активация дополнительных проверок:
-           - mvn verify -Pcheck   (включить Checkstyle + SpotBugs)
-           - mvn verify -Pcoverage (включить JaCoCo проверку покрытия)
-           - mvn verify -Pcheck,coverage (все проверки)
+         Активация: mvn verify -Pcheck
          ======================================================================== -->
     <profiles>
-        <!-- Профиль CHECK: статический анализ и стиль кода -->
         <profile>
             <id>check</id>
             <build>
                 <plugins>
+                    <!-- Проверка стиля кода (Checkstyle) -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -384,6 +297,8 @@
                             </execution>
                         </executions>
                     </plugin>
+
+                    <!-- Статический анализ (SpotBugs) -->
                     <plugin>
                         <groupId>com.github.spotbugs</groupId>
                         <artifactId>spotbugs-maven-plugin</artifactId>
@@ -400,4 +315,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
