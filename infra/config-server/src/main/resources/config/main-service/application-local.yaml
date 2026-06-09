@@ -29,4 +29,4 @@ spring:
 logging:
   level:
     root: INFO                               # Общий уровень
-    ru.practicum.explorewithme.main: DEBUG   # Детальное логирование пакета main
+    ru.practicum.main: DEBUG   # Детальное логирование пакета main

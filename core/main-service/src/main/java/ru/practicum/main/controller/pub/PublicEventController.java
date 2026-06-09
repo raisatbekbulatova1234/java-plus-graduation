@@ -1,0 +1,94 @@
+package ru.practicum.main.controller.pub;
+
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.main.aspect.LogStatsHit;
+import ru.practicum.main.dto.EventFullDto;
+import ru.practicum.main.dto.EventShortDto;
+import ru.practicum.main.service.EventService;
+import ru.practicum.main.service.params.PublicEventSearchParams;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static ru.practicum.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
+
+/**
+ * ============================================================================
+ * ПУБЛИЧНЫЙ КОНТРОЛЛЕР СОБЫТИЙ
+ * ============================================================================
+ *
+ * Обрабатывает запросы от неавторизованных пользователей для просмотра событий.
+ * Доступен без аутентификации.
+ */
+@RestController
+@RequestMapping("/events")
+@RequiredArgsConstructor
+@Validated
+@Slf4j
+public class PublicEventController {
+
+    private final EventService eventService;
+
+    /**
+     * Поиск событий с фильтрацией и пагинацией
+     * Аннотация @LogStatsHit - логирует обращение в сервис статистики
+     */
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    @LogStatsHit
+    public List<EventShortDto> getEvents(
+            @RequestParam(name = "text", required = false) String text,
+            @RequestParam(name = "categories", required = false) List<Long> categories,
+            @RequestParam(name = "paid", required = false) Boolean paid,
+            @RequestParam(name = "rangeStart", required = false)
+            @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime rangeStart,
+            @RequestParam(name = "rangeEnd", required = false)
+            @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime rangeEnd,
+            @RequestParam(name = "onlyAvailable", defaultValue = "false") boolean onlyAvailable,
+            @RequestParam(name = "sort", defaultValue = "EVENT_DATE") String sort,
+            @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+            @RequestParam(name = "size", defaultValue = "10") @Positive int size,
+            @RequestHeader(name = "X-Real-IP", required = false) String ipAddress) {
+
+        log.info("Публичный: Получен запрос на поиск событий с параметрами: text={}, categories={}, paid={}, " +
+                        "rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+
+        PublicEventSearchParams params = PublicEventSearchParams.builder()
+                .text(text)
+                .categories(categories)
+                .paid(paid)
+                .rangeStart(rangeStart)
+                .rangeEnd(rangeEnd)
+                .onlyAvailable(onlyAvailable)
+                .sort(sort)
+                .build();
+
+        List<EventShortDto> events = eventService.getEventsPublic(params, from, size);
+        log.info("Публичный: Найдено {} событий", events.size());
+        return events;
+    }
+
+    /**
+     * Получение полной информации о событии по ID.
+     * Аннотация @LogStatsHit - логирует просмотр события в сервис статистики
+     */
+    @GetMapping("/{eventId}")
+    @ResponseStatus(HttpStatus.OK)
+    @LogStatsHit
+    public EventFullDto getEventById(
+            @PathVariable @Positive Long eventId,
+            @RequestHeader(name = "X-Real-IP", required = false) String ipAddress) {
+        log.info("Публичный: Получен запрос на получение события с id={}", eventId);
+        EventFullDto event = eventService.getEventByIdPublic(eventId);
+        log.info("Публичный: Найдено событие: {}", event);
+        return event;
+    }
+}

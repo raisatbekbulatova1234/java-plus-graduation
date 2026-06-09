@@ -1,31 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  EWM-COMMON - ОБЩИЙ МОДУЛЬ
+  ============================================================================
+  Содержит общие компоненты, используемые во всех сервисах проекта.
+
+  Состав:
+    - общие утилиты и константы
+    - исключения и обработчики ошибок (ApiError)
+    - общие конфигурации
+
+  Родитель: core (агрегатор бизнес-логики)
+  Артефакт: JAR (используется как зависимость в других модулях)
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>ru.practicum</groupId>
-    <artifactId>explore-with-me</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
-  </parent>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>ewm-common</artifactId>
-  <packaging>jar</packaging>
+    <parent>
+        <groupId>ru.practicum</groupId>
+        <artifactId>core</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-  </dependencies>
+    <artifactId>ewm-common</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Explore With Me :: Common</name>
+    <description>Shared utilities, exceptions, and constants for all services</description>
+
+    <dependencies>
+        <!-- Lombok - генерация кода -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
+        <!-- Spring Web - для аннотаций REST и обработки JSON -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Jackson аннотации (@JsonFormat и др.) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

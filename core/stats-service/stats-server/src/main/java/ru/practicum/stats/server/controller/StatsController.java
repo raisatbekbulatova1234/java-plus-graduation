@@ -13,7 +13,7 @@ import ru.practicum.stats.dto.ViewStatsDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static ru.practicum.explorewithme.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
+import static ru.practicum.common.constants.DateTimeConstants.DATE_TIME_FORMAT_PATTERN;
 
 /**
  * ============================================================================
