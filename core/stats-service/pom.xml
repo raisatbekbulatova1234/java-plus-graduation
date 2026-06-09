@@ -1,20 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  МОДУЛЬ STATS-SERVICE (АГРЕГАТОР СЕРВИСА СТАТИСТИКИ)
+  ============================================================================
+
+  Агрегирует все модули, связанные со статистикой и аналитикой проекта.
+
+  Состав модулей:
+    - stats-client  → клиентская библиотека для отправки статистики из других сервисов
+    - stats-dto     → общие DTO для обмена данными статистики
+    - stats-server  → сервер статистики (приём и выдача данных)
+
+  Родитель: core (агрегатор бизнес-модулей)
+  Версии и зависимости наследуются от корневого pom.xml
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>ru.practicum</groupId>
         <artifactId>core</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>stats-service</artifactId>
+    <packaging>pom</packaging>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <modules>
+        <module>stats-client</module>
+        <module>stats-dto</module>
+        <module>stats-server</module>
+
+    </modules>
 
 </project>

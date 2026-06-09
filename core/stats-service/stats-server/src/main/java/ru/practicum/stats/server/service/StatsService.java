@@ -1,0 +1,22 @@
+package ru.practicum.stats.server.service;
+
+import ru.practicum.explorewithme.stats.dto.EndpointHitDto;
+import ru.practicum.explorewithme.stats.dto.ViewStatsDto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * ============================================================================
+ * ИНТЕРФЕЙС СЕРВИСА СТАТИСТИКИ
+ * ============================================================================
+ *
+ * Определяет методы для сохранения и получения статистики обращений к API.
+ */
+public interface StatsService {
+
+    void saveHit(EndpointHitDto endpointHitDto);
+
+    List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique);
+
+}
