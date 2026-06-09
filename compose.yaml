@@ -1,53 +1,66 @@
 services:
+  # ============================================================================
+  # STATS-SERVER - СЕРВЕР СТАТИСТИКИ
+  # ============================================================================
   stats-server:
-    build: stats-service/stats-server
-    container_name: ewm-stats-server-compose
+    build: ./core/stats-service/stats-server           # Путь к Dockerfile
+    container_name: ewm-stats-server-compose          # Имя контейнера
     depends_on:
       stats-db:
-        condition: service_healthy
+        condition: service_healthy                    # Ждём готовности БД
     ports:
-      - "9090:9090"
+      - "9090:9090"                                   # Маппинг портов
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm_stats_db
       - SPRING_DATASOURCE_USERNAME=stats_user
       - SPRING_DATASOURCE_PASSWORD=stats_password
-      - JAVA_OPTS=-Duser.timezone=UTC
+      - JAVA_OPTS=-Duser.timezone=UTC                 # Часовой пояс
 
+  # ============================================================================
+  # STATS-DB - БАЗА ДАННЫХ ДЛЯ СТАТИСТИКИ
+  # ============================================================================
   stats-db:
-    image: postgres:16.1
+    image: postgres:16.1                               # Образ PostgreSQL
     container_name: ewm-stats-db-compose
     ports:
-      - "6543:5432"
+      - "6543:5432"                                    # Маппинг портов
     environment:
       POSTGRES_USER: stats_user
       POSTGRES_PASSWORD: stats_password
       POSTGRES_DB: ewm_stats_db
     volumes:
-      - stats_db_data:/var/lib/postgresql/data
-      - ./stats-service/stats-server/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - stats_db_data:/var/lib/postgresql/data         # Данные БД
+      - ./core/stats-service/stats-server/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql  # Инициализация
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -p 5432" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      interval: 10s                                     # Проверка каждые 10 секунд
+      timeout: 5s                                       # Таймаут проверки
+      retries: 5                                        # Попыток до ошибки
+      start_period: 10s                                 # Время на запуск
 
+  # ============================================================================
+  # EWM-SERVICE - ОСНОВНОЙ СЕРВИС (БИЗНЕС-ЛОГИКА)
+  # ============================================================================
   ewm-service:
-    build: core/main-service
+    build: ./core/main-service                         # Путь к Dockerfile
     container_name: ewm-main-service-compose
     depends_on:
       ewm-db:
-        condition: service_healthy
+        condition: service_healthy                      # Ждём свою БД
       stats-server:
-        condition: service_started
+        condition: service_started                      # Ждём запуск статистики
     ports:
-      - "8080:8080"
+      - "8080:8080"                                     # Маппинг портов
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm_main_db
       - SPRING_DATASOURCE_USERNAME=ewm_user
       - SPRING_DATASOURCE_PASSWORD=ewm_password
+      - STATS_SERVER_URL=http://stats-server:9090       # URL для stats-client
       - JAVA_OPTS=-Duser.timezone=UTC
 
+  # ============================================================================
+  # EWM-DB - БАЗА ДАННЫХ ОСНОВНОГО СЕРВИСА
+  # ============================================================================
   ewm-db:
     image: postgres:16.1
     container_name: ewm-main-db-compose
@@ -58,8 +71,8 @@ services:
       POSTGRES_PASSWORD: ewm_password
       POSTGRES_DB: ewm_main_db
     volumes:
-      - main_db_data:/var/lib/postgresql/data
-      - ./main-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - main_db_data:/var/lib/postgresql/data           # Данные БД
+      - ./core/main-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql  # Инициализация
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -p 5432" ]
       interval: 10s
@@ -67,7 +80,9 @@ services:
       retries: 5
       start_period: 10s
 
-
+# ============================================================================
+# ТОМА ДЛЯ ХРАНЕНИЯ ДАННЫХ БАЗ
+# ============================================================================
 volumes:
-  stats_db_data: {}
-  main_db_data: {}
+  stats_db_data: {}      # Данные статистики
+  main_db_data: {}       # Данные основного сервиса

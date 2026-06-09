@@ -8,7 +8,6 @@ import ru.practicum.main.dto.EventFullDto;
 import ru.practicum.main.dto.EventShortDto;
 import ru.practicum.main.dto.NewEventDto;
 import ru.practicum.main.model.Event;
-import ru.practicum.main.model.EventState;
 
 /**
  * MapStruct маппер для сущности Event (событие)
