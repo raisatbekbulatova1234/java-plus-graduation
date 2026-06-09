@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explorewithme.stats.dto.EndpointHitDto;
-import ru.practicum.explorewithme.stats.dto.ViewStatsDto;
-import ru.practicum.explorewithme.stats.server.mapper.EndpointHitMapper;
-import ru.practicum.explorewithme.stats.server.model.EndpointHit;
-import ru.practicum.explorewithme.stats.server.repository.StatsRepository;
+import ru.practicum.stats.dto.EndpointHitDto;
+import ru.practicum.stats.dto.ViewStatsDto;
+import ru.practicum.stats.server.mapper.EndpointHitMapper;
+import ru.practicum.stats.server.model.EndpointHit;
+import ru.practicum.stats.server.repository.StatsRepository;
 
 /**
  * ============================================================================

@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.stats.dto.ViewStatsDto;
-import ru.practicum.explorewithme.stats.server.model.EndpointHit;
+import ru.practicum.stats.dto.ViewStatsDto;
+import ru.practicum.stats.server.model.EndpointHit;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
