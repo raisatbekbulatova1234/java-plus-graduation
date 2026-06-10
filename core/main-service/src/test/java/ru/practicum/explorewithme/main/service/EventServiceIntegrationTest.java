@@ -115,16 +115,16 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен успешно создавать событие")
         void addEventPrivate_whenDataIsValid_thenEventIsCreated() {
             NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Valid Annotation")
-                .category(category1.getId())
-                .description("Valid Description")
-                .eventDate(now.plusHours(3))
-                .location(location1)
-                .paid(false)
-                .participantLimit(10L)
-                .requestModeration(true)
-                .title("Valid Event Title")
-                .build();
+                    .annotation("Valid Annotation")
+                    .category(category1.getId())
+                    .description("Valid Description")
+                    .eventDate(now.plusHours(3))
+                    .location(location1)
+                    .paid(false)
+                    .participantLimit(10L)
+                    .requestModeration(true)
+                    .title("Valid Event Title")
+                    .build();
 
             EventFullDto createdEventDto = eventService.addEventPrivate(user1.getId(), newEventDto);
 
@@ -144,10 +144,10 @@ class EventServiceIntegrationTest {
         void addEventPrivate_whenUserNotFound_thenThrowsEntityNotFoundException() {
             Long nonExistentUserId = 999L;
             NewEventDto newEventDto = NewEventDto.builder().category(category1.getId()).eventDate(now.plusHours(3))
-                .annotation("A").description("D").title("T").location(location1).build();
+                    .annotation("A").description("D").title("T").location(location1).build();
 
             assertThrows(EntityNotFoundException.class, () ->
-                eventService.addEventPrivate(nonExistentUserId, newEventDto));
+                    eventService.addEventPrivate(nonExistentUserId, newEventDto));
         }
 
         @Test
@@ -155,20 +155,20 @@ class EventServiceIntegrationTest {
         void addEventPrivate_whenCategoryNotFound_thenThrowsEntityNotFoundException() {
             Long nonExistentCategoryId = 888L;
             NewEventDto newEventDto = NewEventDto.builder().category(nonExistentCategoryId).eventDate(now.plusHours(3))
-                .annotation("A").description("D").title("T").location(location1).build();
+                    .annotation("A").description("D").title("T").location(location1).build();
 
             assertThrows(EntityNotFoundException.class, () ->
-                eventService.addEventPrivate(user1.getId(), newEventDto));
+                    eventService.addEventPrivate(user1.getId(), newEventDto));
         }
 
         @Test
         @DisplayName("Должен выбрасывать BusinessRuleViolationException, если дата события слишком ранняя")
         void addEventPrivate_whenEventDateIsTooSoon_thenThrowsBusinessRuleViolationException() {
             NewEventDto newEventDto = NewEventDto.builder().category(category1.getId()).eventDate(now.plusHours(1))
-                .annotation("A").description("D").title("T").location(location1).build();
+                    .annotation("A").description("D").title("T").location(location1).build();
 
             assertThrows(BusinessRuleViolationException.class, () ->
-                eventService.addEventPrivate(user1.getId(), newEventDto));
+                    eventService.addEventPrivate(user1.getId(), newEventDto));
         }
     }
 
@@ -179,14 +179,14 @@ class EventServiceIntegrationTest {
         @BeforeEach
         void setUpAdminEvents() {
             Event event1 = Event.builder().title("Admin Event 1").annotation("A1").description("D1")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(5)).state(EventState.PENDING).createdOn(now.minusDays(1)).build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(5)).state(EventState.PENDING).createdOn(now.minusDays(1)).build();
             Event event2 = Event.builder().title("Admin Event 2").annotation("A2").description("D2")
-                .category(category2).initiator(user2).location(location1)
-                .eventDate(now.plusDays(10)).state(EventState.PUBLISHED).createdOn(now.minusDays(2)).build();
+                    .category(category2).initiator(user2).location(location1)
+                    .eventDate(now.plusDays(10)).state(EventState.PUBLISHED).createdOn(now.minusDays(2)).build();
             Event event3 = Event.builder().title("Admin Event 3").annotation("Another A").description("Another D")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(15)).state(EventState.PUBLISHED).createdOn(now.minusDays(3)).build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(15)).state(EventState.PUBLISHED).createdOn(now.minusDays(3)).build();
             eventRepository.saveAll(List.of(event1, event2, event3));
         }
 
@@ -232,9 +232,9 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен вернуть соответствующие события при поиске с фильтром по диапазону дат")
         void getEventsAdmin_whenDateRangeFilterApplied_thenReturnsMatchingEvents() {
             AdminEventSearchParams params = AdminEventSearchParams.builder()
-                .rangeStart(now.plusDays(7))
-                .rangeEnd(now.plusDays(12))
-                .build();
+                    .rangeStart(now.plusDays(7))
+                    .rangeEnd(now.plusDays(12))
+                    .build();
             List<EventFullDto> result = eventService.getEventsAdmin(params, 0, 10);
             assertEquals(1, result.size());
             assertEquals("Admin Event 2", result.getFirst().getTitle());
@@ -244,9 +244,9 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен выбрасывать IllegalArgumentException при поиске с невалидным диапазоном дат")
         void getEventsAdmin_whenInvalidDateRange_thenThrowsIllegalArgumentException() {
             AdminEventSearchParams params = AdminEventSearchParams.builder()
-                .rangeStart(now.plusDays(10))
-                .rangeEnd(now.plusDays(5))
-                .build();
+                    .rangeStart(now.plusDays(10))
+                    .rangeEnd(now.plusDays(5))
+                    .build();
             assertThrows(IllegalArgumentException.class, () -> eventService.getEventsAdmin(params, 0, 10));
         }
 
@@ -268,14 +268,14 @@ class EventServiceIntegrationTest {
         void setUpOwnerEvents() {
             // Создаем события для разных пользователей
             eventUser1Cat1 = Event.builder().title("User1 Event Cat1").annotation("A").description("D")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
             eventUser1Cat2 = Event.builder().title("User1 Event Cat2").annotation("A").description("D")
-                .category(category2).initiator(user1).location(location1)
-                .eventDate(now.plusDays(2)).state(EventState.PUBLISHED).createdOn(now).build();
+                    .category(category2).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(2)).state(EventState.PUBLISHED).createdOn(now).build();
             eventUser2Cat1 = Event.builder().title("User2 Event Cat1").annotation("A").description("D")
-                .category(category1).initiator(user2).location(location1)
-                .eventDate(now.plusDays(3)).state(EventState.PENDING).createdOn(now).build();
+                    .category(category1).initiator(user2).location(location1)
+                    .eventDate(now.plusDays(3)).state(EventState.PENDING).createdOn(now).build();
             eventRepository.saveAll(List.of(eventUser1Cat1, eventUser1Cat2, eventUser2Cat1));
         }
 
@@ -319,8 +319,8 @@ class EventServiceIntegrationTest {
         @BeforeEach
         void setUpPrivateEvent() {
             user1Event = Event.builder().title("User1 Specific Event").annotation("A").description("D")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
             user1Event = eventRepository.save(user1Event);
         }
 
@@ -365,10 +365,10 @@ class EventServiceIntegrationTest {
         @BeforeEach
         void setUpUpdateEvent() {
             eventToUpdate = Event.builder().title("Event to Update").annotation("Initial Annotation")
-                .category(category1).initiator(user1).location(location1).description("Event Description")
-                .eventDate(now.plusDays(5)).state(EventState.PENDING) // Можно обновлять PENDING
-                .createdOn(now.minusDays(1)).participantLimit(10).paid(false).requestModeration(true)
-                .build();
+                    .category(category1).initiator(user1).location(location1).description("Event Description")
+                    .eventDate(now.plusDays(5)).state(EventState.PENDING) // Можно обновлять PENDING
+                    .createdOn(now.minusDays(1)).participantLimit(10).paid(false).requestModeration(true)
+                    .build();
             eventToUpdate = eventRepository.save(eventToUpdate);
         }
 
@@ -376,11 +376,11 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен успешно обновлять событие (название, аннотация, дата, состояние в PENDING)")
         void updateEventByOwner_whenValidUpdate_thenEventIsUpdated() {
             UpdateEventUserRequestDto updateDto = UpdateEventUserRequestDto.builder()
-                .title("Updated Title by Owner")
-                .annotation("Updated Annotation by Owner")
-                .eventDate(now.plusHours(3)) // Валидная дата
-                .stateAction(UpdateEventUserRequestDto.StateActionUser.SEND_TO_REVIEW)
-                .build();
+                    .title("Updated Title by Owner")
+                    .annotation("Updated Annotation by Owner")
+                    .eventDate(now.plusHours(3)) // Валидная дата
+                    .stateAction(UpdateEventUserRequestDto.StateActionUser.SEND_TO_REVIEW)
+                    .build();
 
             EventFullDto updatedEventDto = eventService.updateEventByOwner(user1.getId(), eventToUpdate.getId(), updateDto);
 
@@ -399,8 +399,8 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен изменять состояние на CANCELED при stateAction = CANCEL_REVIEW")
         void updateEventByOwner_whenCancelReview_thenStateIsCanceled() {
             UpdateEventUserRequestDto updateDto = UpdateEventUserRequestDto.builder()
-                .stateAction(UpdateEventUserRequestDto.StateActionUser.CANCEL_REVIEW)
-                .build();
+                    .stateAction(UpdateEventUserRequestDto.StateActionUser.CANCEL_REVIEW)
+                    .build();
 
             EventFullDto updatedEventDto = eventService.updateEventByOwner(user1.getId(), eventToUpdate.getId(), updateDto);
             assertEquals(EventState.CANCELED, updatedEventDto.getState());
@@ -425,8 +425,8 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен выбросить BusinessRuleViolationException, если новая дата события слишком ранняя")
         void updateEventByOwner_whenNewEventDateIsTooSoon_thenThrowsBusinessRuleViolationException() {
             UpdateEventUserRequestDto updateDto = UpdateEventUserRequestDto.builder()
-                .eventDate(now.plusHours(1)) // Менее 2 часов
-                .build();
+                    .eventDate(now.plusHours(1)) // Менее 2 часов
+                    .build();
 
             assertThrows(BusinessRuleViolationException.class, () -> eventService.updateEventByOwner(user1.getId(), eventToUpdate.getId(), updateDto));
         }
@@ -444,8 +444,8 @@ class EventServiceIntegrationTest {
         void updateEventByOwner_whenCategoryForUpdateNotFound_thenThrowsEntityNotFoundException() {
             Long nonExistentCategoryId = 999L;
             UpdateEventUserRequestDto updateDto = UpdateEventUserRequestDto.builder()
-                .category(nonExistentCategoryId)
-                .build();
+                    .category(nonExistentCategoryId)
+                    .build();
 
             assertThrows(EntityNotFoundException.class, () -> eventService.updateEventByOwner(user1.getId(), eventToUpdate.getId(), updateDto));
         }
@@ -462,29 +462,29 @@ class EventServiceIntegrationTest {
         void setUpModerateIntegrationTests() {
 
             pendingEvent = Event.builder()
-                .title("Pending Event for Moderation")
-                .annotation("Annotation for pending moderation")
-                .description("Description")
-                .category(category1)
-                .initiator(user1)
-                .location(Location.builder().lat(50f).lon(50f).build())
-                .eventDate(now.plusDays(3))
-                .createdOn(now.minusDays(1))
-                .state(EventState.PENDING)
-                .build();
+                    .title("Pending Event for Moderation")
+                    .annotation("Annotation for pending moderation")
+                    .description("Description")
+                    .category(category1)
+                    .initiator(user1)
+                    .location(Location.builder().lat(50f).lon(50f).build())
+                    .eventDate(now.plusDays(3))
+                    .createdOn(now.minusDays(1))
+                    .state(EventState.PENDING)
+                    .build();
             pendingEvent = eventRepository.save(pendingEvent);
 
             publishedEventForRejectTest = Event.builder()
-                .title("Published Event to Test Rejection")
-                .annotation("Annotation")
-                .description("Description")
-                .category(category2)
-                .initiator(user2)
-                .location(Location.builder().lat(51f).lon(51f).build())
-                .eventDate(now.plusDays(4))
-                .createdOn(now.minusDays(2))
-                .state(EventState.PENDING) // Сначала PENDING
-                .build();
+                    .title("Published Event to Test Rejection")
+                    .annotation("Annotation")
+                    .description("Description")
+                    .category(category2)
+                    .initiator(user2)
+                    .location(Location.builder().lat(51f).lon(51f).build())
+                    .eventDate(now.plusDays(4))
+                    .createdOn(now.minusDays(2))
+                    .state(EventState.PENDING) // Сначала PENDING
+                    .build();
             publishedEventForRejectTest = eventRepository.save(publishedEventForRejectTest);
             publishedEventForRejectTest.setState(EventState.PUBLISHED);
             publishedEventForRejectTest.setPublishedOn(now.minusHours(1)); // Опубликовано час назад
@@ -498,8 +498,8 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен успешно публиковать PENDING событие")
         void moderateEventByAdmin_whenPublishPendingEvent_thenStateIsPublishedAndPublishedOnSet() {
             UpdateEventAdminRequestDto publishDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             EventFullDto resultDto = eventService.moderateEventByAdmin(pendingEvent.getId(), publishDto);
 
@@ -508,7 +508,7 @@ class EventServiceIntegrationTest {
             assertNotNull(resultDto.getPublishedOn());
             // Проверяем, что publishedOn примерно равен now (в пределах нескольких секунд из-за выполнения кода)
             assertTrue(resultDto.getPublishedOn().isAfter(now.minusSeconds(5)) &&
-                resultDto.getPublishedOn().isBefore(now.plusSeconds(5)));
+                    resultDto.getPublishedOn().isBefore(now.plusSeconds(5)));
 
             Optional<Event> foundEvent = eventRepository.findById(pendingEvent.getId());
             assertTrue(foundEvent.isPresent());
@@ -520,8 +520,8 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен успешно отклонять PENDING событие")
         void moderateEventByAdmin_whenRejectPendingEvent_thenStateIsCanceled() {
             UpdateEventAdminRequestDto rejectDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.REJECT_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.REJECT_EVENT)
+                    .build();
 
             EventFullDto resultDto = eventService.moderateEventByAdmin(pendingEvent.getId(), rejectDto);
 
@@ -539,12 +539,12 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен обновлять поля события (например, title, category) при публикации")
         void moderateEventByAdmin_whenPublishWithFieldUpdates_thenFieldsAreUpdated() {
             UpdateEventAdminRequestDto updateAndPublishDto = UpdateEventAdminRequestDto.builder()
-                .title("Admin Updated Published Title")
-                .annotation("Admin new annotation")
-                .category(anotherCategory.getId())
-                .eventDate(now.plusDays(2))
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .title("Admin Updated Published Title")
+                    .annotation("Admin new annotation")
+                    .category(anotherCategory.getId())
+                    .eventDate(now.plusDays(2))
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             EventFullDto resultDto = eventService.moderateEventByAdmin(pendingEvent.getId(), updateAndPublishDto);
 
@@ -569,8 +569,8 @@ class EventServiceIntegrationTest {
             eventRepository.saveAndFlush(pendingEvent);
 
             UpdateEventAdminRequestDto publishDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             assertThrows(BusinessRuleViolationException.class, () -> eventService.moderateEventByAdmin(pendingEvent.getId(), publishDto));
         }
@@ -582,8 +582,8 @@ class EventServiceIntegrationTest {
             eventRepository.saveAndFlush(pendingEvent);
 
             UpdateEventAdminRequestDto publishDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             assertThrows(BusinessRuleViolationException.class, () -> eventService.moderateEventByAdmin(pendingEvent.getId(), publishDto));
         }
@@ -592,9 +592,9 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен выбросить BusinessRuleViolationException при публикации, если eventDate из DTO слишком ранняя")
         void moderateEventByAdmin_whenPublishWithDtoEventDateTooSoon_thenThrowsBusinessRuleViolationException() {
             UpdateEventAdminRequestDto publishDtoWithEarlyDate = UpdateEventAdminRequestDto.builder()
-                .eventDate(LocalDateTime.now().plusMinutes(30))
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .eventDate(LocalDateTime.now().plusMinutes(30))
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
             // pendingEvent.eventDate (now.plusDays(3)) сама по себе валидна, но DTO ее переопределит
 
             assertThrows(BusinessRuleViolationException.class, () -> eventService.moderateEventByAdmin(pendingEvent.getId(), publishDtoWithEarlyDate));
@@ -604,8 +604,8 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен выбросить BusinessRuleViolationException при попытке отклонить уже PUBLISHED событие")
         void moderateEventByAdmin_whenRejectAlreadyPublishedEvent_thenThrowsBusinessRuleViolationException() {
             UpdateEventAdminRequestDto rejectDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.REJECT_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.REJECT_EVENT)
+                    .build();
 
             assertThrows(BusinessRuleViolationException.class, () -> eventService.moderateEventByAdmin(publishedEventForRejectTest.getId(), rejectDto));
         }
@@ -615,8 +615,8 @@ class EventServiceIntegrationTest {
         void moderateEventByAdmin_whenEventNotFound_thenThrowsEntityNotFoundException() {
             Long nonExistentEventId = 9999L;
             UpdateEventAdminRequestDto publishDto = UpdateEventAdminRequestDto.builder()
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             assertThrows(EntityNotFoundException.class, () -> eventService.moderateEventByAdmin(nonExistentEventId, publishDto));
         }
@@ -626,9 +626,9 @@ class EventServiceIntegrationTest {
         void moderateEventByAdmin_whenUpdatingWithNonExistentCategory_thenThrowsEntityNotFoundException() {
             Long nonExistentCategoryId = 8888L;
             UpdateEventAdminRequestDto updateDtoWithBadCategory = UpdateEventAdminRequestDto.builder()
-                .category(nonExistentCategoryId)
-                .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
-                .build();
+                    .category(nonExistentCategoryId)
+                    .stateAction(UpdateEventAdminRequestDto.StateActionAdmin.PUBLISH_EVENT)
+                    .build();
 
             pendingEvent.setEventDate(now.plusHours(2));
             eventRepository.saveAndFlush(pendingEvent);
@@ -645,10 +645,10 @@ class EventServiceIntegrationTest {
         @BeforeEach
         void setUpPublicEvent() {
             publishedEvent = Event.builder().title("Public Event Alpha").annotation("A_pub").description("D_pub")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now.minusDays(10))
-                .participantLimit(10)
-                .build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now.minusDays(10))
+                    .participantLimit(10)
+                    .build();
             publishedEvent = eventRepository.save(publishedEvent);
             publishedEvent.setState(EventState.PUBLISHED);
             publishedEvent.setPublishedOn(now.minusDays(1));
@@ -665,9 +665,9 @@ class EventServiceIntegrationTest {
             String eventUri = "/events/" + publishedEvent.getId();
             ViewStatsDto viewStat = new ViewStatsDto("ewm-main-service", eventUri, 5L);
             when(statsClient.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(List.of(eventUri)), eq(true)))
-                .thenReturn(List.of(viewStat));
+                    .thenReturn(List.of(viewStat));
 
-            EventFullDto resultDto = eventService.getEventByIdPublic(publishedEvent.getId());
+            EventFullDto resultDto = eventService.getEventByIdPublic(publishedEvent.getId(), "127.0.0.1");
 
             assertNotNull(resultDto);
             assertEquals(publishedEvent.getId(), resultDto.getId());
@@ -681,12 +681,13 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен выбросить EntityNotFoundException, если событие не опубликовано")
         void getEventByIdPublic_whenEventNotPublished_thenThrowsEntityNotFoundException() {
             Event pendingEvent = Event.builder().title("Pending Event").annotation("A").description("D")
-                .category(category1).initiator(user1).location(location1)
-                .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
+                    .category(category1).initiator(user1).location(location1)
+                    .eventDate(now.plusDays(1)).state(EventState.PENDING).createdOn(now).build();
             pendingEvent = eventRepository.save(pendingEvent);
             Long pendingEventId = pendingEvent.getId();
 
-            assertThrows(EntityNotFoundException.class, () -> eventService.getEventByIdPublic(pendingEventId));
+            assertThrows(EntityNotFoundException.class, () ->
+                    eventService.getEventByIdPublic(pendingEventId, "127.0.0.1"));
         }
 
         @Test
@@ -694,15 +695,15 @@ class EventServiceIntegrationTest {
         void getEventByIdPublic_whenStatsServiceFailsOrReturnsEmpty_thenViewsAreZero() {
             String eventUri = "/events/" + publishedEvent.getId();
             when(statsClient.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(List.of(eventUri)), eq(true)))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
-            EventFullDto resultDtoEmptyStats = eventService.getEventByIdPublic(publishedEvent.getId());
+            EventFullDto resultDtoEmptyStats = eventService.getEventByIdPublic(publishedEvent.getId(), "127.0.0.1");
             assertEquals(0L, resultDtoEmptyStats.getViews(), "Views should be 0 if stats service returns empty");
 
             when(statsClient.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(List.of(eventUri)), eq(true)))
-                .thenThrow(new RuntimeException("Stats service error"));
+                    .thenThrow(new RuntimeException("Stats service error"));
 
-            EventFullDto resultDtoErrorStats = eventService.getEventByIdPublic(publishedEvent.getId());
+            EventFullDto resultDtoErrorStats = eventService.getEventByIdPublic(publishedEvent.getId(), "127.0.0.1");
             assertEquals(0L, resultDtoErrorStats.getViews(), "Views should be 0 if stats service throws error");
             assertEquals(2L, resultDtoErrorStats.getConfirmedRequests());
         }
@@ -716,30 +717,30 @@ class EventServiceIntegrationTest {
         @BeforeEach
         void setUpPublicEvents() {
             event1Pub = Event.builder().title("Public Search Event Alpha")
-                .annotation("Alpha sports concert")
-                .description("Description for Public Search Event Alpha")
-                .category(category1).initiator(user1).location(location1).paid(false)
-                .eventDate(now.plusDays(5)).state(EventState.PUBLISHED)
-                .publishedOn(now.minusDays(1)).participantLimit(10).createdOn(now.minusDays(2))
-                .build(); // 5 подтверждённых запросов
+                    .annotation("Alpha sports concert")
+                    .description("Description for Public Search Event Alpha")
+                    .category(category1).initiator(user1).location(location1).paid(false)
+                    .eventDate(now.plusDays(5)).state(EventState.PUBLISHED)
+                    .publishedOn(now.minusDays(1)).participantLimit(10).createdOn(now.minusDays(2))
+                    .build(); // 5 подтверждённых запросов
             event2Pub = Event.builder().title("Public Search Event Beta")
-                .annotation("Beta culture festival")
-                .description("Description for Public Search Event Beta")
-                .category(category2).initiator(user2).location(location2).paid(true)
-                .eventDate(now.plusDays(2)).state(EventState.PUBLISHED)
-                .publishedOn(now.minusDays(2)).participantLimit(3).createdOn(now.minusDays(3))
-                .build(); // 1 подтверждённый запрос
+                    .annotation("Beta culture festival")
+                    .description("Description for Public Search Event Beta")
+                    .category(category2).initiator(user2).location(location2).paid(true)
+                    .eventDate(now.plusDays(2)).state(EventState.PUBLISHED)
+                    .publishedOn(now.minusDays(2)).participantLimit(3).createdOn(now.minusDays(3))
+                    .build(); // 1 подтверждённый запрос
             event3Pending = Event.builder().title("Public Search Event Gamma (Pending)")
-                .annotation("Gamma").description(
-                    "Description for Public Search Event Gamma (Pending)")
-                .category(category1).initiator(user1).location(location1).eventDate(now.plusDays(3))
-                .state(EventState.PENDING).createdOn(now.minusDays(1)).build();
+                    .annotation("Gamma").description(
+                            "Description for Public Search Event Gamma (Pending)")
+                    .category(category1).initiator(user1).location(location1).eventDate(now.plusDays(3))
+                    .state(EventState.PENDING).createdOn(now.minusDays(1)).build();
             event4PastPub = Event.builder().title("Past Public Event Delta")
-                .annotation("Delta retro")
-                .description("Description for Past Public Event Delta")
-                .category(category2).initiator(user2).location(location2).paid(false)
-                .eventDate(now.minusDays(1)).state(EventState.PUBLISHED)
-                .publishedOn(now.minusDays(2)).createdOn(now.minusDays(3)).build();
+                    .annotation("Delta retro")
+                    .description("Description for Past Public Event Delta")
+                    .category(category2).initiator(user2).location(location2).paid(false)
+                    .eventDate(now.minusDays(1)).state(EventState.PUBLISHED)
+                    .publishedOn(now.minusDays(2)).createdOn(now.minusDays(3)).build();
 
             eventRepository.saveAll(List.of(event1Pub, event2Pub, event3Pending, event4PastPub));
 
@@ -758,7 +759,7 @@ class EventServiceIntegrationTest {
         void getEventsPublic_noDateRange_shouldReturnFuturePublishedEvents() {
             PublicEventSearchParams params = PublicEventSearchParams.builder().build();
             when(statsClient.getStats(any(LocalDateTime.class), any(LocalDateTime.class), anyList(), anyBoolean()))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
             List<EventShortDto> results = eventService.getEventsPublic(params, 0, 10);
 
@@ -806,9 +807,9 @@ class EventServiceIntegrationTest {
         @DisplayName("Должен корректно фильтровать по диапазону дат, включая прошлое, если указан rangeStart")
         void getEventsPublic_withDateRangeIncludingPast_shouldReturnMatchingEvents() {
             PublicEventSearchParams params = PublicEventSearchParams.builder()
-                .rangeStart(now.minusDays(2))
-                .rangeEnd(now.plusDays(6))
-                .build();
+                    .rangeStart(now.minusDays(2))
+                    .rangeEnd(now.plusDays(6))
+                    .build();
             when(statsClient.getStats(any(), any(), anyList(), eq(true))).thenReturn(Collections.emptyList());
 
             List<EventShortDto> results = eventService.getEventsPublic(params, 0, 10);
@@ -829,9 +830,9 @@ class EventServiceIntegrationTest {
             entityManager.clear();
 
             PublicEventSearchParams params = PublicEventSearchParams.builder()
-                .onlyAvailable(true)
-                .rangeStart(now.minusDays(5))
-                .build();
+                    .onlyAvailable(true)
+                    .rangeStart(now.minusDays(5))
+                    .build();
             when(statsClient.getStats(any(), any(), anyList(), eq(true))).thenReturn(Collections.emptyList());
 
             List<EventShortDto> results = eventService.getEventsPublic(params, 0, 10);
@@ -859,9 +860,9 @@ class EventServiceIntegrationTest {
             String uri1 = "/events/" + event1Pub.getId();
             String uri2 = "/events/" + event2Pub.getId();
             PublicEventSearchParams params = PublicEventSearchParams.builder()
-                .sort("VIEWS")
-                .rangeStart(now.minusDays(5))
-                .build();
+                    .sort("VIEWS")
+                    .rangeStart(now.minusDays(5))
+                    .build();
 
             ViewStatsDto stat1 = new ViewStatsDto(applicationName, uri1, 100L);
             ViewStatsDto stat2 = new ViewStatsDto(applicationName, uri2, 200L);
@@ -869,7 +870,7 @@ class EventServiceIntegrationTest {
             ViewStatsDto stat4 = new ViewStatsDto(applicationName, uri4, 50L);
 
             when(statsClient.getStats(any(LocalDateTime.class), any(LocalDateTime.class), anyList(), eq(true)))
-                .thenReturn(List.of(stat1, stat2, stat4));
+                    .thenReturn(List.of(stat1, stat2, stat4));
 
             List<EventShortDto> results = eventService.getEventsPublic(params, 0, 10);
 

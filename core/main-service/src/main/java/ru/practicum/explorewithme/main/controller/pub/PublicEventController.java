@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.main.controller.pub;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import static ru.practicum.explorewithme.common.constants.DateTimeConstants.DATE
 public class PublicEventController {
 
     private final EventService eventService;
+    private final HttpServletRequest httpServletRequest; // Добавлен для получения IP
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -70,8 +72,19 @@ public class PublicEventController {
     public EventFullDto getEventById(
             @PathVariable @Positive Long eventId,
             @RequestHeader(name = "X-Real-IP", required = false) String ipAddress) {
+
         log.info("Public: Received request to get event with id={}", eventId);
-        EventFullDto event = eventService.getEventByIdPublic(eventId);
+
+        // Определяем реальный IP клиента
+        String clientIp = ipAddress;
+        if (clientIp == null || clientIp.isBlank()) {
+            clientIp = httpServletRequest.getRemoteAddr();
+            log.debug("Public: Using remote address as client IP: {}", clientIp);
+        } else {
+            log.debug("Public: Using X-Real-IP header as client IP: {}", clientIp);
+        }
+
+        EventFullDto event = eventService.getEventByIdPublic(eventId, clientIp);
         log.info("Public: Found event: {}", event);
         return event;
     }

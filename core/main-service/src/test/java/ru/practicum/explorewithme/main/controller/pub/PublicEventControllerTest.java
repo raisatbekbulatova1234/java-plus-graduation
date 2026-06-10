@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
@@ -68,7 +67,7 @@ class PublicEventControllerTest {
     @MockitoBean
     private StatsClient statsClient;
 
-    @Value("${spring.application.name}")
+    @org.springframework.beans.factory.annotation.Value("${spring.application.name}")
     private String configuredAppName;
 
     @Captor
@@ -93,27 +92,27 @@ class PublicEventControllerTest {
             List<EventShortDto> mockEvents = List.of(event1);
 
             when(eventService.getEventsPublic(any(PublicEventSearchParams.class), anyInt(), anyInt()))
-                .thenReturn(mockEvents);
+                    .thenReturn(mockEvents);
 
             mockMvc.perform(get("/events")
-                    .param("text", "search text")
-                    .param("from", "0")
-                    .param("size", "10")
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title", is("Event Alpha")));
+                            .param("text", "search text")
+                            .param("from", "0")
+                            .param("size", "10")
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].title", is("Event Alpha")));
 
             PublicEventSearchParams expectedSearchParams = PublicEventSearchParams.builder()
-                .text("search text")
-                .categories(null)
-                .paid(null)
-                .rangeStart(null)
-                .rangeEnd(null)
-                .onlyAvailable(false)
-                .sort("EVENT_DATE")
-                .build();
+                    .text("search text")
+                    .categories(null)
+                    .paid(null)
+                    .rangeStart(null)
+                    .rangeEnd(null)
+                    .onlyAvailable(false)
+                    .sort("EVENT_DATE")
+                    .build();
             verify(eventService).getEventsPublic(eq(expectedSearchParams), eq(0), eq(10));
 
             verify(statsClient, times(1)).saveHit(hitDtoCaptor.capture());
@@ -128,13 +127,13 @@ class PublicEventControllerTest {
         @DisplayName("должен отправлять хит даже если сервис событий вернул пустой список")
         void whenServiceReturnsEmpty_shouldStillLogHit() throws Exception {
             when(eventService.getEventsPublic(any(PublicEventSearchParams.class), anyInt(), anyInt()))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/events")
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(0)));
 
             verify(statsClient, times(1)).saveHit(any(EndpointHitDto.class));
         }
@@ -145,9 +144,9 @@ class PublicEventControllerTest {
             when(eventService.getEventsPublic(any(), anyInt(), anyInt())).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/events")
-                    .header("X-Real-IP", "10.0.0.1")
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                            .header("X-Real-IP", "10.0.0.1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
 
             verify(statsClient).saveHit(hitDtoCaptor.capture());
             assertEquals("10.0.0.1", hitDtoCaptor.getValue().getIp());
@@ -158,11 +157,11 @@ class PublicEventControllerTest {
         void withoutXRealIpHeader_shouldUseRemoteAddrForHit() throws Exception {
             String defaultMockIp = "127.0.0.1";
             when(eventService.getEventsPublic(any(), anyInt(), anyInt()))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/events")
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
 
             verify(statsClient).saveHit(hitDtoCaptor.capture());
             assertEquals(defaultMockIp, hitDtoCaptor.getValue().getIp());
@@ -183,31 +182,31 @@ class PublicEventControllerTest {
             String ip = "10.0.0.2";
 
             PublicEventSearchParams expectedSearchParams = PublicEventSearchParams.builder()
-                .text(text)
-                .categories(categories)
-                .paid(paid)
-                .rangeStart(rangeStart)
-                .rangeEnd(rangeEnd)
-                .onlyAvailable(onlyAvailable)
-                .sort(sort)
-                .build();
+                    .text(text)
+                    .categories(categories)
+                    .paid(paid)
+                    .rangeStart(rangeStart)
+                    .rangeEnd(rangeEnd)
+                    .onlyAvailable(onlyAvailable)
+                    .sort(sort)
+                    .build();
 
             when(eventService.getEventsPublic(eq(expectedSearchParams), eq(from), eq(size)))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/events")
-                    .param("text", text)
-                    .param("categories", "1", "2")
-                    .param("paid", paid.toString())
-                    .param("rangeStart", rangeStart.format(formatter))
-                    .param("rangeEnd", rangeEnd.format(formatter))
-                    .param("onlyAvailable", String.valueOf(onlyAvailable))
-                    .param("sort", sort)
-                    .param("from", String.valueOf(from))
-                    .param("size", String.valueOf(size))
-                    .header("X-Real-IP", ip)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                            .param("text", text)
+                            .param("categories", "1", "2")
+                            .param("paid", paid.toString())
+                            .param("rangeStart", rangeStart.format(formatter))
+                            .param("rangeEnd", rangeEnd.format(formatter))
+                            .param("onlyAvailable", String.valueOf(onlyAvailable))
+                            .param("sort", sort)
+                            .param("from", String.valueOf(from))
+                            .param("size", String.valueOf(size))
+                            .header("X-Real-IP", ip)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
 
             verify(eventService).getEventsPublic(eq(expectedSearchParams), eq(from), eq(size));
             verify(statsClient).saveHit(any(EndpointHitDto.class));
@@ -222,23 +221,23 @@ class PublicEventControllerTest {
 
 
             PublicEventSearchParams expectedSearchParams = PublicEventSearchParams.builder()
-                .text(null)
-                .categories(null)
-                .paid(null)
-                .rangeStart(null)
-                .rangeEnd(null)
-                .onlyAvailable(false)
-                .sort("EVENT_DATE")
-                .build();
+                    .text(null)
+                    .categories(null)
+                    .paid(null)
+                    .rangeStart(null)
+                    .rangeEnd(null)
+                    .onlyAvailable(false)
+                    .sort("EVENT_DATE")
+                    .build();
 
             when(eventService.getEventsPublic(eq(expectedSearchParams), eq(from), eq(size)))
-                .thenReturn(Collections.emptyList());
+                    .thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/events")
-                    .param("from", String.valueOf(from))
-                    .param("size", String.valueOf(size))
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                            .param("from", String.valueOf(from))
+                            .param("size", String.valueOf(size))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
 
             verify(eventService).getEventsPublic(eq(expectedSearchParams), eq(from), eq(size));
             verify(statsClient).saveHit(any(EndpointHitDto.class));
@@ -248,10 +247,10 @@ class PublicEventControllerTest {
         @DisplayName("должен вернуть 400 Bad Request при невалидном значении 'from'")
         void withInvalidFrom_shouldReturnBadRequest() throws Exception {
             mockMvc.perform(get("/events")
-                    .param("from", "-1")
-                    .param("size", "10")
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                            .param("from", "-1")
+                            .param("size", "10")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
             verifyNoInteractions(eventService);
             verify(statsClient, never()).saveHit(any(EndpointHitDto.class));
         }
@@ -260,10 +259,10 @@ class PublicEventControllerTest {
         @DisplayName("должен вернуть 400 Bad Request при невалидном значении 'size'")
         void withInvalidSize_shouldReturnBadRequest() throws Exception {
             mockMvc.perform(get("/events")
-                    .param("from", "0")
-                    .param("size", "0")
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                            .param("from", "0")
+                            .param("size", "0")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
             verifyNoInteractions(eventService);
             verify(statsClient, never()).saveHit(any(EndpointHitDto.class));
         }
@@ -278,21 +277,23 @@ class PublicEventControllerTest {
         void shouldReturnEventAndLogHit() throws Exception {
             Long eventId = 1L;
             EventFullDto mockEvent = EventFullDto.builder()
-                .id(eventId)
-                .title("Specific Event")
-                .eventDate(LocalDateTime.now().plusDays(1).withNano(0))
-                .build();
+                    .id(eventId)
+                    .title("Specific Event")
+                    .eventDate(LocalDateTime.now().plusDays(1).withNano(0))
+                    .build();
 
-            when(eventService.getEventByIdPublic(eq(eventId))).thenReturn(mockEvent);
+            // ИСПРАВЛЕНО: добавлен параметр clientIp
+            when(eventService.getEventByIdPublic(eq(eventId), any(String.class))).thenReturn(mockEvent);
 
             mockMvc.perform(get("/events/{eventId}", eventId)
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(eventId.intValue())))
-                .andExpect(jsonPath("$.title", is("Specific Event")));
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", is(eventId.intValue())))
+                    .andExpect(jsonPath("$.title", is("Specific Event")));
 
-            verify(eventService).getEventByIdPublic(eq(eventId));
+            // ИСПРАВЛЕНО: проверка вызова с IP адресом
+            verify(eventService).getEventByIdPublic(eq(eventId), eq(testIpAddress));
 
             verify(statsClient, times(1)).saveHit(hitDtoCaptor.capture());
             EndpointHitDto capturedHit = hitDtoCaptor.getValue();
@@ -303,17 +304,50 @@ class PublicEventControllerTest {
         }
 
         @Test
-        @DisplayName("должен отправлять хит даже если сервис событий выбросил NotFoundException")
-        void whenServiceThrowsNotFound_shouldStillLogHitAndReturn404() throws Exception {
-            Long eventId = 999L;
-            when(eventService.getEventByIdPublic(eq(eventId)))
-                .thenThrow(new ru.practicum.explorewithme.main.error.EntityNotFoundException("Event not found"));
+        @DisplayName("должен использовать IP из заголовка X-Real-IP при вызове сервиса")
+        void shouldUseXRealIpHeaderWhenCallingService() throws Exception {
+            Long eventId = 1L;
+            String customIp = "10.20.30.40";
+            EventFullDto mockEvent = EventFullDto.builder().id(eventId).title("Test Event").build();
+
+            when(eventService.getEventByIdPublic(eq(eventId), eq(customIp))).thenReturn(mockEvent);
 
             mockMvc.perform(get("/events/{eventId}", eventId)
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                            .header("X-Real-IP", customIp)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
 
+            verify(eventService).getEventByIdPublic(eq(eventId), eq(customIp));
+        }
+
+        @Test
+        @DisplayName("должен использовать remote address если заголовок X-Real-IP отсутствует")
+        void shouldUseRemoteAddressWhenNoXRealIpHeader() throws Exception {
+            Long eventId = 1L;
+            EventFullDto mockEvent = EventFullDto.builder().id(eventId).title("Test Event").build();
+
+            when(eventService.getEventByIdPublic(eq(eventId), eq("127.0.0.1"))).thenReturn(mockEvent);
+
+            mockMvc.perform(get("/events/{eventId}", eventId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            verify(eventService).getEventByIdPublic(eq(eventId), eq("127.0.0.1"));
+        }
+
+        @Test
+        @DisplayName("должен НЕ отправлять хит если сервис событий выбросил NotFoundException")
+        void whenServiceThrowsNotFound_shouldNotLogHitAndReturn404() throws Exception {
+            Long eventId = 999L;
+            when(eventService.getEventByIdPublic(eq(eventId), any(String.class)))
+                    .thenThrow(new ru.practicum.explorewithme.main.error.EntityNotFoundException("Event not found"));
+
+            mockMvc.perform(get("/events/{eventId}", eventId)
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            // ИСПРАВЛЕНО: при ошибке 404 хит НЕ должен отправляться
             verify(statsClient, never()).saveHit(any(EndpointHitDto.class));
         }
 
@@ -321,9 +355,9 @@ class PublicEventControllerTest {
         @DisplayName("должен вернуть 400 Bad Request при невалидном eventId в пути")
         void withInvalidEventIdPath_shouldReturnBadRequest() throws Exception {
             mockMvc.perform(get("/events/{eventId}", "notANumber")
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
 
             verifyNoInteractions(eventService);
             verify(statsClient, never()).saveHit(any(EndpointHitDto.class));
@@ -338,40 +372,40 @@ class PublicEventControllerTest {
             LocalDateTime publishedOn = LocalDateTime.now().minusHours(1).withNano(0);
 
             EventFullDto mockEvent = EventFullDto.builder()
-                .id(eventId)
-                .title("Specific Event Title")
-                .annotation("Specific Annotation")
-                .description("Specific Description")
-                .eventDate(eventDate)
-                .createdOn(createdOn)
-                .publishedOn(publishedOn)
-                .paid(true)
-                .participantLimit(100)
-                .requestModeration(false)
-                .state(EventState.PUBLISHED)
-                .views(1000L)
-                .confirmedRequests(50L)
-                .build();
+                    .id(eventId)
+                    .title("Specific Event Title")
+                    .annotation("Specific Annotation")
+                    .description("Specific Description")
+                    .eventDate(eventDate)
+                    .createdOn(createdOn)
+                    .publishedOn(publishedOn)
+                    .paid(true)
+                    .participantLimit(100)
+                    .requestModeration(false)
+                    .state(EventState.PUBLISHED)
+                    .views(1000L)
+                    .confirmedRequests(50L)
+                    .build();
 
-            when(eventService.getEventByIdPublic(eq(eventId))).thenReturn(mockEvent);
+            when(eventService.getEventByIdPublic(eq(eventId), any(String.class))).thenReturn(mockEvent);
 
             mockMvc.perform(get("/events/{eventId}", eventId)
-                    .header("X-Real-IP", testIpAddress)
-                    .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(eventId.intValue())))
-                .andExpect(jsonPath("$.title", is("Specific Event Title")))
-                .andExpect(jsonPath("$.annotation", is("Specific Annotation")))
-                .andExpect(jsonPath("$.description", is("Specific Description")))
-                .andExpect(jsonPath("$.eventDate", is(eventDate.format(formatter))))
-                .andExpect(jsonPath("$.createdOn", is(createdOn.format(formatter))))
-                .andExpect(jsonPath("$.publishedOn", is(publishedOn.format(formatter))))
-                .andExpect(jsonPath("$.paid", is(true)))
-                .andExpect(jsonPath("$.participantLimit", is(100)))
-                .andExpect(jsonPath("$.requestModeration", is(false)))
-                .andExpect(jsonPath("$.state", is("PUBLISHED")))
-                .andExpect(jsonPath("$.views", is(1000)))
-                .andExpect(jsonPath("$.confirmedRequests", is(50)));
+                            .header("X-Real-IP", testIpAddress)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", is(eventId.intValue())))
+                    .andExpect(jsonPath("$.title", is("Specific Event Title")))
+                    .andExpect(jsonPath("$.annotation", is("Specific Annotation")))
+                    .andExpect(jsonPath("$.description", is("Specific Description")))
+                    .andExpect(jsonPath("$.eventDate", is(eventDate.format(formatter))))
+                    .andExpect(jsonPath("$.createdOn", is(createdOn.format(formatter))))
+                    .andExpect(jsonPath("$.publishedOn", is(publishedOn.format(formatter))))
+                    .andExpect(jsonPath("$.paid", is(true)))
+                    .andExpect(jsonPath("$.participantLimit", is(100)))
+                    .andExpect(jsonPath("$.requestModeration", is(false)))
+                    .andExpect(jsonPath("$.state", is("PUBLISHED")))
+                    .andExpect(jsonPath("$.views", is(1000)))
+                    .andExpect(jsonPath("$.confirmedRequests", is(50)));
 
             verify(statsClient, times(1)).saveHit(any(EndpointHitDto.class));
         }

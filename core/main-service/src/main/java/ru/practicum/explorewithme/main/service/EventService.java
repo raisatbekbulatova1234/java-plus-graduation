@@ -11,9 +11,9 @@ import ru.practicum.explorewithme.main.service.params.PublicEventSearchParams;
 
 public interface EventService {
     List<EventFullDto> getEventsAdmin(
-        AdminEventSearchParams params,
-        int from,
-        int size
+            AdminEventSearchParams params,
+            int from,
+            int size
     );
 
     List<EventShortDto> getEventsByOwner(Long userId, int from, int size);
@@ -28,5 +28,6 @@ public interface EventService {
 
     List<EventShortDto> getEventsPublic(PublicEventSearchParams params, int from, int size);
 
-    EventFullDto getEventByIdPublic(Long eventId);
+    // ИЗМЕНЕНО: добавлен параметр clientIp
+    EventFullDto getEventByIdPublic(Long eventId, String clientIp);
 }
