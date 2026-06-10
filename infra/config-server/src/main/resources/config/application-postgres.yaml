@@ -1,15 +1,16 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create  # изменили с validate на create
+    show-sql: true
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/ewm_main_db
+    username: ewm_user
+    password: ewm_password
     driver-class-name: org.postgresql.Driver
   sql:
     init:
-      mode: always
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      mode: never  # отключаем schema.sql
+  properties:
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect

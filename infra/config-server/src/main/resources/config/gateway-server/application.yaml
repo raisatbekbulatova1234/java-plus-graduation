@@ -93,7 +93,7 @@ management:
       probes:
         enabled: true
     gateway:
-      enabled: true
+      access: read_only   # ← НОВЫЙ ФОРМАТ
   health:
     livenessstate:
       enabled: true

@@ -80,6 +80,7 @@ services:
     volumes:
       - stats_db_data:/var/lib/postgresql/data
       - ./core/stats-service/stats-server/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./core/stats-service/stats-server/src/main/resources/02-init-privileges.sql:/docker-entrypoint-initdb.d/02-init-privileges.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -p 5432" ]
       interval: 10s
@@ -120,6 +121,7 @@ services:
     volumes:
       - main_db_data:/var/lib/postgresql/data
       - ./core/main-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./core/main-service/src/main/resources/02-init-privileges.sql:/docker-entrypoint-initdb.d/02-init-privileges.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -p 5432" ]
       interval: 10s
