@@ -36,7 +36,7 @@ public class UpdateEventUserRequestDto {
     Boolean paid;
 
     @PositiveOrZero(message = "Participant limit must be positive or zero")
-    Integer participantLimit;
+    Long participantLimit;  // ← ИСПРАВЛЕНО: Integer -> Long
 
     Boolean requestModeration;
 

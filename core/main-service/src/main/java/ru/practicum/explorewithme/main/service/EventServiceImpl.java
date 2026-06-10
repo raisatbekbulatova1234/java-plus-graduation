@@ -158,51 +158,75 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         String.format("Event with id=%d not found or is not published.", eventId)));
 
-        // НОВЫЙ КОД: Сохраняем просмотр события в статистике
+        // Сохраняем просмотр события в статистике
         saveEventHit(eventId, clientIp);
+
+        // Небольшая задержка для гарантии обработки хита stats-server'ом
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Thread was interrupted during delay for event id={}", eventId);
+        }
 
         long views = getEventViews(eventId);
         long confirmedRequestsCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
-        log.debug("Public: Event id={} - views={}, confirmedRequests={}", eventId, views, confirmedRequestsCount);
+        log.info("Public: Event id={} - views={}, confirmedRequests={}", eventId, views, confirmedRequestsCount);
 
         EventFullDto resultDto = eventMapper.toEventFullDto(event);
         resultDto.setViews(views);
         resultDto.setConfirmedRequests(confirmedRequestsCount);
 
-        log.info("Public: Found event id={} with title='{}', views={}, confirmedRequests={}",
+        log.info("Public: Returning event id={} with title='{}', views={}, confirmedRequests={}",
                 eventId, resultDto.getTitle(), resultDto.getViews(), resultDto.getConfirmedRequests());
         return resultDto;
     }
 
-    // НОВЫЙ МЕТОД: Сохранение hit о просмотре события
+    /**
+     * Сохранение hit о просмотре события в сервисе статистики
+     */
     private void saveEventHit(Long eventId, String clientIp) {
         try {
+            String ipForSave = (clientIp != null && !clientIp.isBlank()) ? clientIp : "unknown";
+            log.debug("Public: Saving hit for event id={} from IP={}", eventId, ipForSave);
+
             EndpointHitDto hitDto = EndpointHitDto.builder()
                     .app("ewm-main-service")
                     .uri("/events/" + eventId)
-                    .ip(clientIp != null && !clientIp.isBlank() ? clientIp : "unknown")
+                    .ip(ipForSave)
                     .timestamp(LocalDateTime.now())
                     .build();
             statsClient.saveHit(hitDto);
-            log.debug("Public: Saved view hit for event id={} from IP={}", eventId, clientIp);
+            log.debug("Public: Successfully saved view hit for event id={} from IP={}", eventId, ipForSave);
         } catch (Exception e) {
             log.error("Public: Failed to save view hit for event id={} from IP={}. Error: {}",
-                    eventId, clientIp, e.getMessage());
+                    eventId, clientIp, e.getMessage(), e);
         }
     }
 
-    // НОВЫЙ МЕТОД: Получение количества просмотров события
+    /**
+     * Получение количества уникальных просмотров события из сервиса статистики
+     */
     private long getEventViews(Long eventId) {
         long views = 0L;
         try {
             String eventUri = "/events/" + eventId;
+            // Используем дату с 2000 года, чтобы избежать проблем с часовыми поясами
+            LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+            LocalDateTime endDate = LocalDateTime.now();
+
+            log.debug("Public: Requesting views for event id={}, uri={}, start={}, end={}",
+                    eventId, eventUri, startDate, endDate);
+
             List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.of(1970, 1, 1, 0, 0, 0),
-                    LocalDateTime.now(),
+                    startDate,
+                    endDate,
                     List.of(eventUri),
                     true // Уникальные просмотры по IP
             );
+
+            log.debug("Public: Stats response for event id={}: {}", eventId, stats);
 
             if (stats != null && !stats.isEmpty()) {
                 Optional<ViewStatsDto> eventStat = stats.stream()
@@ -210,11 +234,15 @@ public class EventServiceImpl implements EventService {
                         .findFirst();
                 if (eventStat.isPresent()) {
                     views = eventStat.get().getHits();
+                    log.debug("Public: Found {} unique views for event id={}", views, eventId);
+                } else {
+                    log.debug("Public: No stats found for event id={} in response", eventId);
                 }
+            } else {
+                log.debug("Public: Stats response is null or empty for event id={}", eventId);
             }
-            log.debug("Public: Retrieved {} views for event id={}", views, eventId);
         } catch (Exception e) {
-            log.error("Public: Failed to retrieve views for event id={}. Error: {}", eventId, e.getMessage());
+            log.error("Public: Failed to retrieve views for event id={}. Error: {}", eventId, e.getMessage(), e);
         }
         return views;
     }
@@ -351,6 +379,7 @@ public class EventServiceImpl implements EventService {
         log.debug("Fetching events for owner (user) id: {}, from: {}, size: {}", userId, from, size);
 
         if (!userRepository.existsById(userId)) {
+            log.debug("User with id={} not found, returning empty list", userId);
             return Collections.emptyList();
         }
 
@@ -403,7 +432,7 @@ public class EventServiceImpl implements EventService {
             event.setPaid(requestDto.getPaid());
         }
         if (requestDto.getParticipantLimit() != null) {
-            event.setParticipantLimit(requestDto.getParticipantLimit());
+            event.setParticipantLimit(requestDto.getParticipantLimit().intValue());
         }
         if (requestDto.getRequestModeration() != null) {
             event.setRequestModeration(requestDto.getRequestModeration());
@@ -466,13 +495,19 @@ public class EventServiceImpl implements EventService {
 
         Event event = eventMapper.toEvent(newEventDto);
         event.setInitiator(user);
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        Event savedEvent = eventRepository.save(event);
+        log.info("Событие успешно создано с id={}", savedEvent.getId());
+        return eventMapper.toEventFullDto(savedEvent);
     }
 
+    /**
+     * Получение карты просмотров для списка событий
+     */
     private Map<Long, Long> getViewsForEvents(List<Event> events) {
         if (events == null || events.isEmpty()) {
             return Collections.emptyMap();
         }
+
         List<String> uris = events.stream()
                 .map(event -> "/events/" + event.getId())
                 .distinct()
@@ -481,7 +516,7 @@ public class EventServiceImpl implements EventService {
         LocalDateTime earliestCreation = events.stream()
                 .map(Event::getCreatedOn)
                 .min(LocalDateTime::compareTo)
-                .orElse(LocalDateTime.of(1970, 1, 1, 0, 0));
+                .orElse(LocalDateTime.of(2000, 1, 1, 0, 0));
 
         Map<Long, Long> viewsMap = new HashMap<>();
         try {
@@ -496,13 +531,14 @@ public class EventServiceImpl implements EventService {
                     try {
                         Long eventId = Long.parseLong(stat.getUri().substring("/events/".length()));
                         viewsMap.put(eventId, stat.getHits());
+                        log.debug("Event id={} has {} views", eventId, stat.getHits());
                     } catch (NumberFormatException | IndexOutOfBoundsException e) {
                         log.warn("Could not parse eventId from URI {} from stats service", stat.getUri());
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to retrieve views for multiple events. Error: {}", e.getMessage());
+            log.error("Failed to retrieve views for multiple events. Error: {}", e.getMessage(), e);
         }
         return viewsMap;
     }
