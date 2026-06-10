@@ -14,7 +14,7 @@ import ru.practicum.explorewithme.stats.dto.ViewStatsDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@FeignClient(name = "stats-server")
+@FeignClient(name = "stats-server", url = "${stats-server.url:http://localhost:9090}")
 public interface StatsClient {
 
     @PostMapping("/hit")
@@ -22,8 +22,8 @@ public interface StatsClient {
 
     @GetMapping("/stats")
     List<ViewStatsDto> getStats(
-        @RequestParam @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime start,
-        @RequestParam @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime end,
-        @RequestParam(value = "uris", required = false) List<String> uris,
-        @RequestParam(value = "unique", defaultValue = "false") Boolean unique);
+            @RequestParam @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN) LocalDateTime end,
+            @RequestParam(value = "uris", required = false) List<String> uris,
+            @RequestParam(value = "unique", defaultValue = "true") Boolean unique);  // ← ИСПРАВЛЕНО: default true
 }

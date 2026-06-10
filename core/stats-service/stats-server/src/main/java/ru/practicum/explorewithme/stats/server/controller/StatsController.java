@@ -38,7 +38,8 @@ public class StatsController implements StatsClient {
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public void saveHit(@Valid @RequestBody EndpointHitDto endpointHitDto) {
-        log.info("Controller: request to save new hit received.");
+        log.info("Controller: request to save new hit received. App={}, uri={}, ip={}",
+                endpointHitDto.getApp(), endpointHitDto.getUri(), endpointHitDto.getIp());
         log.debug("Saving new hit: {}", endpointHitDto);
         statsService.saveHit(endpointHitDto);
     }
@@ -49,26 +50,27 @@ public class StatsController implements StatsClient {
      * @param start  Дата и время начала диапазона (в формате "yyyy-MM-dd HH:mm:ss")
      * @param end    Дата и время конца диапазона (в формате "yyyy-MM-dd HH:mm:ss")
      * @param uris   Список uri для которых нужно выгрузить статистику (опционально)
-     * @param unique Нужно ли учитывать только уникальные посещения (опционально, default: false)
+     * @param unique Нужно ли учитывать только уникальные посещения (опционально, default: true)
      * @return Список ViewStatsDto со статистикой
      */
     @GetMapping("/stats")
     @ResponseStatus(HttpStatus.OK)
     public List<ViewStatsDto> getStats(
-        @RequestParam(name = "start")
-        @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN)
-        LocalDateTime start,
+            @RequestParam(name = "start")
+            @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN)
+            LocalDateTime start,
 
-        @RequestParam(name = "end")
-        @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN)
-        LocalDateTime end,
+            @RequestParam(name = "end")
+            @DateTimeFormat(pattern = DATE_TIME_FORMAT_PATTERN)
+            LocalDateTime end,
 
-        @RequestParam(name = "uris", required = false) List<String> uris,
-        @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
+            @RequestParam(name = "uris", required = false) List<String> uris,
+            @RequestParam(name = "unique", defaultValue = "true") Boolean unique) {  // ← ИСПРАВЛЕНО: false -> true
 
-        log.info("Controller: request to retrieve stats received.");
+        log.info("Controller: request to retrieve stats received. start={}, end={}, uris={}, unique={}",
+                start, end, uris, unique);
         log.debug("Request params: start={}, end={}, uris={}, unique={}",
-            start, end, uris, unique);
+                start, end, uris, unique);
 
         return statsService.getStats(start, end, uris, unique);
     }
