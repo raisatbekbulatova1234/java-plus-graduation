@@ -1,23 +1,26 @@
 spring:
+  main:
+    web-application-type: reactive
   application:
-    name: gateway-server
+    name: gateway
   config:
-    import: "configserver:"
+    import: optional:configserver:http://config-server:9091
   cloud:
     config:
-      discovery:
-        enabled: true
-        serviceId: config-server
       fail-fast: true
       retry:
-        max-attempts: 10
-        initial-interval: 1000
         useRandomPolicy: true
+        max-interval: 6000
+      discovery:
+        enabled: true
+        service-id: config-server
 
 eureka:
   client:
+    register-with-eureka: true
+    fetch-registry: true
     serviceUrl:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
-  instance:
-    instance-id: "${spring.application.name}:${random.value}"
-    leaseRenewalIntervalInSeconds: 10
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
+
+server:
+  port: 0
