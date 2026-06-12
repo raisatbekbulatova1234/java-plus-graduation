@@ -63,10 +63,9 @@ public class CommentServiceImpl implements CommentService {
         }
 
         CommentMapper.updateComment(comment, updateCommentRequest);
-        comment.setStatus(CommentStatus.NEW); // Reset to NEW when updated
+        comment.setStatus(CommentStatus.NEW); // Изменение применяется автоматически
 
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        return CommentMapper.toDto(comment);
     }
 
     @Override
@@ -110,8 +109,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
 
         comment.setStatus(CommentStatus.APPROVED);
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        return CommentMapper.toDto(comment);
     }
 
     @Override
@@ -121,7 +119,6 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
 
         comment.setStatus(CommentStatus.REJECTED);
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        return CommentMapper.toDto(comment);
     }
 }

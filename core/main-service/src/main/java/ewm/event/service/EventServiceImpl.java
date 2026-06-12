@@ -38,7 +38,7 @@ import java.util.*;
 public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-    private final DatabaseEventSearchRepository  databaseEventSearchRepository;
+    private final DatabaseEventSearchRepository databaseEventSearchRepository;
     private final CategoryRepository categoryRepository;
     private final StatsClient statsClient;
     private final ParticipationRequestRepository participationRequestRepository;
@@ -107,7 +107,6 @@ public class EventServiceImpl implements EventService {
         List<Event> eventList = List.of(event, event);
         registerHit(request);
         EventFullDto eventFullDto = this.mapToEventFullDto(eventList).getFirst();
-//        eventFullDto.setViews(eventFullDto.getViews() + 1);
         return eventFullDto;
     }
 
@@ -150,7 +149,7 @@ public class EventServiceImpl implements EventService {
             page = PageRequest.of(from / size, size);
         }
 
-         registerHit(request);
+        registerHit(request);
 
         List<Event> eventList = databaseEventSearchRepository.findPublicEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, page
@@ -185,7 +184,7 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.hasCategory() &&
                 !updatedEvent.getCategory().getId().equals(updateEventUserRequest.getCategory())) {
             Category category = categoryRepository.findById(updateEventUserRequest.getCategory())
-                            .orElseThrow(() -> new NotFoundException("Category not found"));
+                    .orElseThrow(() -> new NotFoundException("Category not found"));
             updatedEvent.setCategory(category);
         }
 
@@ -251,7 +250,13 @@ public class EventServiceImpl implements EventService {
         endpointHitDto.setUri(request.getRequestURI());
         endpointHitDto.setIp(request.getRemoteAddr());
         endpointHitDto.setTimestamp(LocalDateTime.now());
-        statsClient.hit(endpointHitDto);
+
+        try {
+            statsClient.hit(endpointHitDto);
+        } catch (Exception e) {
+            log.error("Failed to register hit for URI: {}, IP: {}, Error: {}",
+                    request.getRequestURI(), request.getRemoteAddr(), e.getMessage(), e);
+        }
     }
 
     private Map<Long, Integer> getEventsViews(List<Event> eventList) {
@@ -282,7 +287,8 @@ public class EventServiceImpl implements EventService {
             }
             return map;
         } catch (Exception ex) {
-            // критично: не роняем эндпоинт
+            log.error("Failed to fetch views for events. URIs: {}, Start: {}, End: {}. Error: {}",
+                    uris, start, end, ex.getMessage(), ex);
             return Map.of();
         }
     }
@@ -309,10 +315,16 @@ public class EventServiceImpl implements EventService {
                 .toList();
 
         Map<Long, Long> map = new HashMap<>();
-        for (ParticipationRequestRepository.EventConfirmedCount row
-                : participationRequestRepository.countConfirmedByEventIds(ids)) {
-            map.put(row.getEventId(), row.getCnt());
+
+        try {
+            for (ParticipationRequestRepository.EventConfirmedCount row
+                    : participationRequestRepository.countConfirmedByEventIds(ids)) {
+                map.put(row.getEventId(), row.getCnt());
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch confirmed requests for events IDs: {}. Error: {}", ids, e.getMessage(), e);
         }
+
         return map;
     }
 

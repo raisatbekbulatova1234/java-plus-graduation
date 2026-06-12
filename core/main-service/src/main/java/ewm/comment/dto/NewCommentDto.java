@@ -7,12 +7,13 @@ import lombok.Data;
 
 @Data
 public class NewCommentDto {
-    public NewCommentDto(String value) {
-        this.text = value;
-    }
 
     @NotNull
     @NotBlank
     @Size(min = 1, max = 5000)
     private String text;
+
+    public NewCommentDto(String value) {
+        this.text = value;
+    }
 }
