@@ -3,11 +3,10 @@ package ewm.category.mapper;
 import ewm.category.dto.NewCategoryDto;
 import ewm.category.model.Category;
 import ewm.common.dto.category.CategoryDto;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CategoryMapper {
+    private CategoryMapper() {
+    }
 
     public static Category toEntity(NewCategoryDto dto) {
         Category category = new Category();
