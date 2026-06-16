@@ -55,7 +55,7 @@ public class EventMapper {
         eventFullDto.setState(event.getState() == null ? null : event.getState().name());
         eventFullDto.setRating(rating);
 
-        // TODO Request
+
         eventFullDto.setConfirmedRequests(confirmedRequests);
 
         return eventFullDto;
@@ -68,7 +68,7 @@ public class EventMapper {
         eventShortDto.setAnnotation(event.getAnnotation());
         eventShortDto.setCategory(event.getCategoryId());
 
-        // TODO Request
+
         eventShortDto.setConfirmedRequests(confirmedRequests);
         eventShortDto.setRating(rating);
         eventShortDto.setEventDate(event.getEventDate());
