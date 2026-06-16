@@ -1,15 +1,15 @@
 package ewm.event.service;
 
-import client.StatsClient;
-import ewm.category.model.Category;
-import ewm.category.repository.CategoryRepository;
+import ewm.common.dto.event.EventFullDto;
+import ewm.common.dto.event.EventShortDto;
+import ewm.common.dto.user.UserDto;
 import ewm.common.exception.BadRequestException;
 import ewm.common.exception.ConflictException;
 import ewm.common.exception.NotFoundException;
-import ewm.event.dto.*;
-import ewm.common.dto.event.*;
 import ewm.event.client.RequestClient;
-import ewm.event.client.dto.EventInternalDto;
+import ewm.event.dto.NewEventDto;
+import ewm.event.dto.UpdateEventAdminRequest;
+import ewm.event.dto.UpdateEventUserRequest;
 import ewm.event.mapper.EventMapper;
 import ewm.event.model.Event;
 import ewm.event.model.EventSort;
@@ -18,7 +18,6 @@ import ewm.event.model.EventStateActionAdmin;
 import ewm.event.repository.DatabaseEventSearchRepository;
 import ewm.event.repository.EventRepository;
 import ewm.user.client.UserClient;
-import ewm.common.dto.user.UserDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +26,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.stats.dto.EndpointHitDto;
-import ru.practicum.ewm.stats.dto.ViewStatsDto;
+import ru.practicum.ewm.client.stats.CollectorClient;
+import ru.practicum.ewm.client.stats.RecommendationsClient;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -40,8 +43,8 @@ public class EventServiceImpl implements EventService {
     private final UserClient userClient;
     private final EventRepository eventRepository;
     private final DatabaseEventSearchRepository databaseEventSearchRepository;
-    private final CategoryRepository categoryRepository;
-    private final StatsClient statsClient;
+    private final CollectorClient collectorClient;
+    private final RecommendationsClient recommendationsClient;
     private final RequestClient requestClient;
 
     @Override
@@ -81,7 +84,7 @@ public class EventServiceImpl implements EventService {
                 });
 
         if (!event.getInitiatorId().equals(userId)) {
-            log.error("User {} not authorized to access event {}", userId, eventId);
+            log.warn("User {} not authorized to access event {}", userId, eventId);
             throw new NotFoundException("Event not found");
         }
 
@@ -106,14 +109,14 @@ public class EventServiceImpl implements EventService {
 
         List<Event> eventList = databaseEventSearchRepository.findForAdmin(users, states, categories, rangeStart, rangeEnd, page);
 
-        log.debug("Found {} events matching filters", eventList.size());
+        log.debug("Found {} events matching admin filters", eventList.size());
         return this.mapToEventFullDto(eventList);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getPublicEvent(Long eventId, HttpServletRequest request) {
-        log.info("Getting public event id: {} from IP: {}", eventId, request.getRemoteAddr());
+    public EventFullDto getPublicEvent(Long userId, Long eventId, HttpServletRequest request) {
+        log.info("Getting public event id: {} for user: {} from IP: {}", eventId, userId, request.getRemoteAddr());
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
@@ -122,12 +125,25 @@ public class EventServiceImpl implements EventService {
                 });
 
         if (event.getState() != EventState.PUBLISHED) {
-            log.warn("Attempt to access unpublished event id: {} with state: {}", eventId, event.getState());
+            log.warn("Attempt to access unpublished event id: {}, state: {}", eventId, event.getState());
             throw new NotFoundException("Event is not published");
         }
 
         List<Event> eventList = List.of(event, event);
-        registerHit(request);
+
+        // Отправка события просмотра в статистику
+        try {
+            UserActionProto userActionProto = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_VIEW)
+                    .build();
+            collectorClient.collectUserAction(userActionProto);
+            log.debug("View action collected for event: {}, user: {}", eventId, userId);
+        } catch (Exception e) {
+            log.error("Failed to collect view action for event: {}, user: {}, Error: {}",
+                    eventId, userId, e.getMessage(), e);
+        }
 
         log.info("Successfully retrieved public event id: {}", eventId);
         return this.mapToEventFullDto(eventList).getFirst();
@@ -166,7 +182,7 @@ public class EventServiceImpl implements EventService {
                                                int size,
                                                HttpServletRequest request) {
 
-        log.info("Searching public events with filters - text: {}, categories: {}, paid: {}, sort: {}, from: {}, size: {}",
+        log.info("Searching public events - text: {}, categories: {}, paid: {}, sort: {}, from: {}, size: {}",
                 text, categories, paid, sort, from, size);
 
         if (rangeStart == null) rangeStart = LocalDateTime.now();
@@ -183,8 +199,6 @@ public class EventServiceImpl implements EventService {
             page = PageRequest.of(from / size, size);
         }
 
-        registerHit(request);
-
         List<Event> eventList = databaseEventSearchRepository.findPublicEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, page
         );
@@ -194,8 +208,8 @@ public class EventServiceImpl implements EventService {
         log.debug("Found {} events matching public search criteria", eventList.size());
 
         if (sort == EventSort.VIEWS) {
-            dtos.sort(Comparator.comparingLong(EventShortDto::getViews).reversed());
-            log.debug("Sorted events by views");
+            dtos.sort(Comparator.comparingDouble(EventShortDto::getRating).reversed());
+            log.debug("Sorted events by rating");
         }
 
         return dtos;
@@ -255,7 +269,7 @@ public class EventServiceImpl implements EventService {
         if (currentEvent.getState().equals(EventState.PUBLISHED) &&
                 updateEventAdminRequest.getEventDate() != null &&
                 updateEventAdminRequest.getEventDate().isAfter(currentEvent.getPublishedOn().minusHours(1))) {
-            log.warn("Invalid event time for event id: {}, eventDate: {}, publishedOn: {}",
+            log.warn("Invalid event time for event: {}, eventDate: {}, publishedOn: {}",
                     eventId, updateEventAdminRequest.getEventDate(), currentEvent.getPublishedOn());
             throw new ConflictException("Invalid event time");
         }
@@ -271,7 +285,7 @@ public class EventServiceImpl implements EventService {
                     log.info("Event id: {} canceled by admin", eventId);
                 }
             } else {
-                log.warn("Invalid event state for event id: {}, current state: {}", eventId, currentEvent.getState());
+                log.warn("Invalid event state for event: {}, current state: {}", eventId, currentEvent.getState());
                 throw new ConflictException("Invalid event state");
             }
         }
@@ -293,6 +307,25 @@ public class EventServiceImpl implements EventService {
         return this.mapToEventFullDto(eventList).getFirst();
     }
 
+    public Iterator<RecommendedEventProto> getRecommendations(Long userId, Long maxResults) {
+        log.info("Getting recommendations for user: {}, maxResults: {}", userId, maxResults);
+
+        try {
+            UserPredictionsRequestProto userPredictionsRequest = UserPredictionsRequestProto.newBuilder()
+                    .setUserId(userId)
+                    .setMaxResults(maxResults)
+                    .build();
+
+            Iterator<RecommendedEventProto> recommendations = recommendationsClient.getRecommendationsForUser(userPredictionsRequest);
+            log.debug("Successfully retrieved recommendations for user: {}", userId);
+
+            return recommendations;
+        } catch (Exception e) {
+            log.error("Failed to get recommendations for user: {}, Error: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Failed to get recommendations", e);
+        }
+    }
+
     private void isEventTimeValid(LocalDateTime eventTime) {
         if (eventTime.isBefore(LocalDateTime.now().plusHours(2))) {
             log.warn("Invalid event time: {}, must be at least 2 hours from now", eventTime);
@@ -300,23 +333,25 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void registerHit(HttpServletRequest request) {
-        EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp("main-service");
-        endpointHitDto.setUri(request.getRequestURI());
-        endpointHitDto.setIp(request.getRemoteAddr());
-        endpointHitDto.setTimestamp(LocalDateTime.now());
+    public void likeEvent(Long userId, Long eventId) {
+        log.info("User {} liking event {}", userId, eventId);
 
         try {
-            statsClient.hit(endpointHitDto);
-            log.debug("Hit registered for URI: {}, IP: {}", request.getRequestURI(), request.getRemoteAddr());
+            UserActionProto userAction = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_LIKE)
+                    .build();
+            collectorClient.collectUserAction(userAction);
+            log.info("Like action collected for event: {}, user: {}", eventId, userId);
         } catch (Exception e) {
-            log.error("Failed to register hit for URI: {}, IP: {}, Error: {}",
-                    request.getRequestURI(), request.getRemoteAddr(), e.getMessage(), e);
+            log.error("Failed to collect like action for event: {}, user: {}, Error: {}",
+                    eventId, userId, e.getMessage(), e);
+            throw new RuntimeException("Failed to like event", e);
         }
     }
 
-    private Map<Long, Integer> getEventsViews(List<Event> eventList) {
+    private Map<Long, Double> getEventsViews(List<Event> eventList) {
         if (eventList == null || eventList.isEmpty()) {
             log.debug("Empty event list, returning empty views map");
             return Map.of();
@@ -334,40 +369,24 @@ public class EventServiceImpl implements EventService {
 
         LocalDateTime end = LocalDateTime.now();
 
-        log.debug("Fetching views for {} events, uris: {}, start: {}, end: {}",
-                eventList.size(), uris, start, end);
+        log.debug("Fetching views for {} events, start: {}, end: {}", eventList.size(), start, end);
 
-        try {
-            List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
-            log.debug("Received {} view stats records", stats.size());
-
-            Map<Long, Integer> map = new HashMap<>();
-            for (ViewStatsDto s : stats) {
-                String[] parts = s.getUri().split("/");
-                if (parts.length >= 3) {
-                    long eventId = Long.parseLong(parts[2]);
-                    map.put(eventId, (int) s.getHits());
-                    log.trace("Event id: {} has {} views", eventId, s.getHits());
-                }
-            }
-            return map;
-        } catch (Exception ex) {
-            log.error("Failed to fetch views for events. URIs: {}, Start: {}, End: {}. Error: {}",
-                    uris, start, end, ex.getMessage(), ex);
-            return Map.of();
-        }
+        // TODO: Реализовать получение реальных просмотров из статистики
+        // Сейчас возвращается пустая карта, так как реализация не готова
+        log.warn("getEventsViews() is not fully implemented - returning empty map");
+        return Map.of();
     }
 
     private List<EventFullDto> mapToEventFullDto(List<Event> eventList) {
         log.debug("Mapping {} events to EventFullDto", eventList.size());
 
-        Map<Long, Integer> views = getEventsViews(eventList);
+        Map<Long, Double> ratings = getEventsViews(eventList);
         Map<Long, Long> confirmed = getConfirmedRequests(eventList);
 
         return eventList.stream()
                 .map(e -> EventMapper.mapToEventFullDto(
                         e,
-                        views.getOrDefault(e.getId(), 0),
+                        ratings.getOrDefault(e.getId(), 0D),
                         confirmed.getOrDefault(e.getId(), 0L)
                 ))
                 .toList();
@@ -387,14 +406,12 @@ public class EventServiceImpl implements EventService {
         log.debug("Fetching confirmed requests for event ids: {}", ids);
 
         try {
-            List<RequestClient.EventConfirmedCountDto> results = requestClient.countConfirmedByEventIds(ids);
-            log.debug("Received {} confirmed request records", results.size());
-
             Map<Long, Long> map = new HashMap<>();
-            for (RequestClient.EventConfirmedCountDto row : results) {
+            for (RequestClient.EventConfirmedCountDto row : requestClient.countConfirmedByEventIds(ids)) {
                 map.put(row.getEventId(), row.getCnt());
                 log.trace("Event id: {} has {} confirmed requests", row.getEventId(), row.getCnt());
             }
+            log.debug("Received {} confirmed request records", map.size());
             return map;
         } catch (Exception e) {
             log.error("Failed to fetch confirmed requests for events IDs: {}. Error: {}", ids, e.getMessage(), e);
@@ -406,13 +423,13 @@ public class EventServiceImpl implements EventService {
     private List<EventShortDto> mapToEventShortDto(List<Event> eventList) {
         log.debug("Mapping {} events to EventShortDto", eventList.size());
 
-        Map<Long, Integer> views = getEventsViews(eventList);
+        Map<Long, Double> views = getEventsViews(eventList);
         Map<Long, Long> confirmed = getConfirmedRequests(eventList);
 
         return eventList.stream()
                 .map(e -> EventMapper.mapToEventShortDto(
                         e,
-                        views.getOrDefault(e.getId(), 0),
+                        views.getOrDefault(e.getId(), 0D),
                         confirmed.getOrDefault(e.getId(), 0L)
                 ))
                 .toList();

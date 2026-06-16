@@ -24,7 +24,11 @@ public class Event {
 
     private Long initiatorId;
 
+    /* === Relations === */
+
     private Long categoryId;
+
+    /* === Basic fields === */
 
     @Column(nullable = false, length = 2000)
     private String annotation;
@@ -50,6 +54,8 @@ public class Event {
     @Column(nullable = false)
     private Long confirmedRequests = 0L;
 
+    /* === Dates === */
+
     @Column(nullable = false)
     private LocalDateTime eventDate;
 
@@ -57,6 +63,8 @@ public class Event {
     private LocalDateTime createdOn;
 
     private LocalDateTime publishedOn;
+
+    /* === State === */
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
