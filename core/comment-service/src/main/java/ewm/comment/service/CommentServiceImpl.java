@@ -15,6 +15,7 @@ import ewm.event.client.dto.EventInternalDto;
 import ewm.user.client.UserClient;
 import ewm.common.dto.user.UserDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
@@ -33,13 +35,22 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentDto create(Long userId, Long eventId, NewCommentDto newCommentDto) {
+        log.info("Creating new comment for user: {}, event: {}", userId, eventId);
+
         UserDto user = userClient.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+                .orElseThrow(() -> {
+                    log.error("User not found: {}", userId);
+                    return new NotFoundException("User not found: " + userId);
+                });
 
         EventInternalDto event = eventClient.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+                .orElseThrow(() -> {
+                    log.error("Event not found: {}", eventId);
+                    return new NotFoundException("Event not found: " + eventId);
+                });
 
         if (!EventState.PUBLISHED.name().equals(event.getState())) {
+            log.warn("Attempt to add comment to unpublished event: {}, state: {}", eventId, event.getState());
             throw new ConflictException("Comments can only be added to published events");
         }
 
@@ -49,34 +60,50 @@ public class CommentServiceImpl implements CommentService {
         comment.setStatus(CommentStatus.NEW);
 
         Comment saved = commentRepository.save(comment);
+        log.info("Comment created with id: {}", saved.getId());
+
         return CommentMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public CommentDto update(Long userId, Long commentId, UpdateCommentRequest updateCommentRequest) {
+        log.info("Updating comment: {} by user: {}", commentId, userId);
+
         Comment comment = commentRepository.findByIdAndAuthorId(commentId, userId)
-                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+                .orElseThrow(() -> {
+                    log.error("Comment not found: {} for user: {}", commentId, userId);
+                    return new NotFoundException("Comment not found: " + commentId);
+                });
 
         if (comment.getStatus() == CommentStatus.REJECTED) {
+            log.warn("Attempt to update rejected comment: {}", commentId);
             throw new ConflictException("Cannot update rejected comment");
         }
 
         CommentMapper.updateComment(comment, updateCommentRequest);
-        comment.setStatus(CommentStatus.NEW); // Reset to NEW when updated
+        comment.setStatus(CommentStatus.NEW);
 
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        log.info("Comment updated: {}", commentId);
+
+        return CommentMapper.toDto(comment);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getEventComments(Long eventId, int from, int size) {
+        log.debug("Getting comments for event: {}, from: {}, size: {}", eventId, from, size);
+
         eventClient.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+                .orElseThrow(() -> {
+                    log.error("Event not found: {}", eventId);
+                    return new NotFoundException("Event not found: " + eventId);
+                });
 
         Pageable page = PageRequest.of(from / size, size);
         List<Comment> comments = commentRepository.findByEventIdAndStatus(eventId, CommentStatus.APPROVED, page);
+
+        log.debug("Found {} approved comments for event: {}", comments.size(), eventId);
 
         return comments.stream()
                 .map(CommentMapper::toDto)
@@ -86,8 +113,12 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getComments(int from, int size) {
+        log.debug("Getting all approved comments, from: {}, size: {}", from, size);
+
         Pageable page = PageRequest.of(from / size, size);
         List<Comment> comments = commentRepository.findAllByStatus(CommentStatus.APPROVED, page);
+
+        log.debug("Found {} approved comments", comments.size());
 
         return comments.stream()
                 .map(CommentMapper::toDto)
@@ -97,31 +128,49 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void delete(Long userId, Long commentId) {
+        log.info("Deleting comment: {} by user: {}", commentId, userId);
+
         Comment comment = commentRepository.findByIdAndAuthorId(commentId, userId)
-                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+                .orElseThrow(() -> {
+                    log.error("Comment not found: {} for user: {}", commentId, userId);
+                    return new NotFoundException("Comment not found: " + commentId);
+                });
 
         commentRepository.delete(comment);
+        log.info("Comment deleted: {}", commentId);
     }
 
     @Override
     @Transactional
     public CommentDto approve(Long commentId) {
+        log.info("Approving comment: {}", commentId);
+
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+                .orElseThrow(() -> {
+                    log.error("Comment not found: {}", commentId);
+                    return new NotFoundException("Comment not found: " + commentId);
+                });
 
         comment.setStatus(CommentStatus.APPROVED);
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        log.info("Comment approved: {}", commentId);
+
+        return CommentMapper.toDto(comment);
     }
 
     @Override
     @Transactional
     public CommentDto reject(Long commentId) {
+        log.info("Rejecting comment: {}", commentId);
+
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+                .orElseThrow(() -> {
+                    log.error("Comment not found: {}", commentId);
+                    return new NotFoundException("Comment not found: " + commentId);
+                });
 
         comment.setStatus(CommentStatus.REJECTED);
-        Comment saved = commentRepository.save(comment);
-        return CommentMapper.toDto(saved);
+        log.info("Comment rejected: {}", commentId);
+
+        return CommentMapper.toDto(comment);
     }
 }
